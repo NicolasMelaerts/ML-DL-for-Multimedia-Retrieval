@@ -30,7 +30,7 @@ def showDialog():
 def process_hierarchical_dataset(base_dir, descriptor_name, descriptor_function, progressBar):
     """
     Traite une base de données hiérarchique et calcule les descripteurs
-    en préservant la structure des dossiers.
+    en créant un seul dossier contenant tous les descripteurs.
     
     Args:
         base_dir: Chemin vers le dossier racine (MIR_DATASETS_B)
@@ -61,20 +61,10 @@ def process_hierarchical_dataset(base_dir, descriptor_name, descriptor_function,
     for animal_dir in os.listdir(base_dir):
         animal_path = os.path.join(base_dir, animal_dir)
         if os.path.isdir(animal_path):
-            # Créer le dossier pour cet animal dans le dossier du descripteur
-            animal_desc_dir = os.path.join(descriptor_name, animal_dir)
-            if not os.path.exists(animal_desc_dir):
-                os.mkdir(animal_desc_dir)
-            
             # Traiter chaque race
             for breed_dir in os.listdir(animal_path):
                 breed_path = os.path.join(animal_path, breed_dir)
                 if os.path.isdir(breed_path):
-                    # Créer le dossier pour cette race
-                    breed_desc_dir = os.path.join(animal_desc_dir, breed_dir)
-                    if not os.path.exists(breed_desc_dir):
-                        os.mkdir(breed_desc_dir)
-                    
                     # Traiter chaque image
                     for img_file in os.listdir(breed_path):
                         if img_file.lower().endswith(('.png', '.jpg', '.jpeg')):
@@ -83,9 +73,10 @@ def process_hierarchical_dataset(base_dir, descriptor_name, descriptor_function,
                                 # Calculer le descripteur
                                 feature = descriptor_function(img_path)
                                 
-                                # Sauvegarder le descripteur
+                                # Sauvegarder le descripteur avec un nom qui inclut l'animal et la race
                                 img_name, _ = os.path.splitext(img_file)
-                                output_path = os.path.join(breed_desc_dir, f"{img_name}.txt")
+                                output_name = f"{animal_dir}_{breed_dir}_{img_name}.txt"
+                                output_path = os.path.join(descriptor_name, output_name)
                                 np.savetxt(output_path, feature)
                                 
                                 # Mettre à jour la barre de progression
@@ -215,3 +206,35 @@ def generateLBP(filenames, progressBar):
 def generateHOG(filenames, progressBar):
     """Génère les descripteurs HOG pour toutes les images dans la base de données"""
     process_hierarchical_dataset(filenames, "HOG", compute_hog, progressBar) 
+
+def extractReqFeatures(fileName, algo_choice):
+    print(f"Extraction des caractéristiques avec l'algorithme {algo_choice}")
+    
+    if algo_choice == 1:  # BGR
+        vect_features = compute_color_histogram(fileName)
+        
+    elif algo_choice == 2:  # HSV
+        vect_features = compute_hsv_histogram(fileName)
+        
+    elif algo_choice == 3:  # SIFT
+        vect_features = compute_sift(fileName)
+        
+    elif algo_choice == 4:  # ORB
+        vect_features = compute_orb(fileName)
+        
+    elif algo_choice == 5:  # GLCM
+        vect_features = compute_glcm(fileName)
+        
+    elif algo_choice == 6:  # LBP
+        vect_features = compute_lbp(fileName)
+    
+    elif algo_choice == 7:  # HOG
+        vect_features = compute_hog(fileName)
+    
+    else:
+        raise ValueError(f"Algorithme non reconnu: {algo_choice}")
+
+    # Sauvegarder les caractéristiques
+    np.savetxt("Methode_"+str(algo_choice)+"_requete.txt", vect_features)
+    print("Caractéristiques sauvegardées")
+    return vect_features

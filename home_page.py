@@ -76,8 +76,11 @@ class HomePage(QtWidgets.QWidget):
         self.descriptorsPage.show()
     
     def openSearchPage(self):
-        # À implémenter plus tard
-        QtWidgets.QMessageBox.information(self, "Information", "Fonctionnalité à venir")
+        from search_page import SearchPage
+        self.searchPage = SearchPage()
+        self.searchPage.backButton.clicked.connect(self.showHomePage)
+        self.hide()
+        self.searchPage.show()
     
     def openDisplayPage(self):
         self.displayPage = DisplayPage()
