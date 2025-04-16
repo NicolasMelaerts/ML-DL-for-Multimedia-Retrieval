@@ -33,4 +33,4 @@ COPY Projet/ ./Projet/
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Définir le fichier principal à lancer
-CMD ["python", "Projet/main.py"]
+CMD ["python", "main.py"]
