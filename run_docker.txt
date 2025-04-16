@@ -23,3 +23,14 @@ docker run -it --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v /Use
 
 
 Important : pip install gdown
+
+
+
+-----------------
+
+
+docker build -t test_projet2 .
+
+docker run -it --rm -e DISPLAY=$DISPLAY -v tmp/.X11-unix:/tmp/.X11-unix test_projet2
+
+docker run -it --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix test_projet2 bash
