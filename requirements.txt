@@ -3,7 +3,7 @@ certifi==2019.11.28
 chardet==3.0.4
 contourpy==1.1.1
 cryptography==2.8
-cupshelpers==1.0
+#cupshelpers==1.0
 cycler==0.12.1
 dbus-python==1.2.16
 defer==1.0.6
