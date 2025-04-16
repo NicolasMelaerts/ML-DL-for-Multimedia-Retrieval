@@ -28,7 +28,8 @@ COPY requirements.txt .
 # RUN chmod +x download_and_unzip.sh && ./download_and_unzip.sh
 
 # Installer les dépendances Python
-#RUN pip install --no-cache-dir sentence-transformers
+RUN pip install --no-cache-dir sentence-transformers
+RUN pip install PyQt5==5.14.1
 
 WORKDIR /opt/TP
 
