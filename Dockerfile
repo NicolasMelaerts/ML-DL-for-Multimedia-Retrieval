@@ -30,6 +30,8 @@ COPY requirements.txt .
 # Installer les dépendances Python
 RUN pip install --no-cache-dir sentence-transformers
 RUN pip install PyQt5==5.14.1
+RUN pip install opencv-python==4.9.0.80
+
 
 WORKDIR /opt/TP
 
