@@ -26,9 +26,6 @@ COPY requirements.txt .
 # Exécuter le script de téléchargement (facultatif, voir discussion plus haut)
 # RUN chmod +x download_and_unzip.sh && ./download_and_unzip.sh
 
-# Copier manuellement le dossier Projet (si pas via le script)
-COPY Projet/ ./Projet/
-
 # Installer les dépendances Python
 RUN pip install --no-cache-dir -r requirements.txt
 
