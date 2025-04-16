@@ -32,17 +32,11 @@ class SearchPage(QtWidgets.QWidget):
         self.setObjectName("SearchPage")
         self.resize(1200, 800)
         
+        # Définir le titre de la fenêtre
+        self.setWindowTitle("Moteur de Recherche d'Images")
+        
         # Layout principal
         self.mainLayout = QtWidgets.QVBoxLayout(self)
-        
-        # Titre
-        self.titleLabel = QtWidgets.QLabel("Moteur de Recherche d'Images")
-        self.titleLabel.setAlignment(QtCore.Qt.AlignCenter)
-        font = QtGui.QFont()
-        font.setPointSize(18)
-        font.setBold(True)
-        self.titleLabel.setFont(font)
-        self.mainLayout.addWidget(self.titleLabel)
         
         # Layout horizontal pour la partie supérieure (3 zones)
         self.topLayout = QtWidgets.QHBoxLayout()
@@ -55,21 +49,30 @@ class SearchPage(QtWidgets.QWidget):
         
         # Sélection des descripteurs
         self.descriptorsGroup = QtWidgets.QGroupBox("Descripteurs")
-        self.descriptorsLayout = QtWidgets.QVBoxLayout(self.descriptorsGroup)
+        self.descriptorsLayout = QtWidgets.QGridLayout(self.descriptorsGroup)  # Utiliser un GridLayout au lieu de QVBoxLayout
         self.controlLayout.addWidget(self.descriptorsGroup)
         
-        # Checkboxes pour les descripteurs
-        self.checkBoxColor = QtWidgets.QCheckBox("Histogramme de couleurs")
-        self.descriptorsLayout.addWidget(self.checkBoxColor)
+        # Checkboxes pour les descripteurs sur 2 colonnes
+        self.checkBoxColor = QtWidgets.QCheckBox("BGR")
+        self.descriptorsLayout.addWidget(self.checkBoxColor, 0, 0)
+        
+        self.checkBoxHSV = QtWidgets.QCheckBox("HSV")
+        self.descriptorsLayout.addWidget(self.checkBoxHSV, 0, 1)
+        
+        self.checkBoxGLCM = QtWidgets.QCheckBox("GLCM")
+        self.descriptorsLayout.addWidget(self.checkBoxGLCM, 1, 0)
         
         self.checkBoxHOG = QtWidgets.QCheckBox("HOG")
-        self.descriptorsLayout.addWidget(self.checkBoxHOG)
+        self.descriptorsLayout.addWidget(self.checkBoxHOG, 1, 1)
         
         self.checkBoxLBP = QtWidgets.QCheckBox("LBP")
-        self.descriptorsLayout.addWidget(self.checkBoxLBP)
+        self.descriptorsLayout.addWidget(self.checkBoxLBP, 2, 0)
         
         self.checkBoxORB = QtWidgets.QCheckBox("ORB")
-        self.descriptorsLayout.addWidget(self.checkBoxORB)
+        self.descriptorsLayout.addWidget(self.checkBoxORB, 2, 1)
+        
+        self.checkBoxSIFT = QtWidgets.QCheckBox("SIFT")
+        self.descriptorsLayout.addWidget(self.checkBoxSIFT, 3, 0)
         
         # Sélection de la distance
         self.distanceGroup = QtWidgets.QGroupBox("Distance")
@@ -80,35 +83,35 @@ class SearchPage(QtWidgets.QWidget):
         self.distanceComboBox.addItems(["Cosinus", "Euclidienne", "Manhattan"])
         self.distanceLayout.addWidget(self.distanceComboBox)
         
-        # Sélection du nombre de résultats
-        self.displayGroup = QtWidgets.QGroupBox("Affichage")
-        self.displayLayout = QtWidgets.QVBoxLayout(self.displayGroup)
-        self.controlLayout.addWidget(self.displayGroup)
-        
-        self.displayComboBox = QtWidgets.QComboBox()
-        self.displayComboBox.addItems(["Top 20", "Top 50"])
-        self.displayLayout.addWidget(self.displayComboBox)
-        
         # ZONE 2: Boutons d'action
         self.buttonPanel = QtWidgets.QGroupBox("Actions")
         self.buttonLayout = QtWidgets.QVBoxLayout(self.buttonPanel)
         self.topLayout.addWidget(self.buttonPanel)
         
         self.loadFeaturesButton = QtWidgets.QPushButton("Charger les descripteurs")
-        self.loadFeaturesButton.setMinimumHeight(40)
+        self.loadFeaturesButton.setMinimumHeight(15)
         self.buttonLayout.addWidget(self.loadFeaturesButton)
         
         self.loadImageButton = QtWidgets.QPushButton("Charger une image")
-        self.loadImageButton.setMinimumHeight(40)
+        self.loadImageButton.setMinimumHeight(15)
         self.buttonLayout.addWidget(self.loadImageButton)
         
+        # Déplacer la section d'affichage ici
+        self.displayGroup = QtWidgets.QGroupBox("Affichage")
+        self.displayLayout = QtWidgets.QVBoxLayout(self.displayGroup)
+        self.buttonLayout.addWidget(self.displayGroup)
+        
+        self.displayComboBox = QtWidgets.QComboBox()
+        self.displayComboBox.addItems(["Top 20", "Top 50"])
+        self.displayLayout.addWidget(self.displayComboBox)
+        
         self.searchButton = QtWidgets.QPushButton("Rechercher")
-        self.searchButton.setMinimumHeight(40)
+        self.searchButton.setMinimumHeight(15)
         self.buttonLayout.addWidget(self.searchButton)
         
         # Ajouter le bouton des métriques ici
         self.metricsButton = QtWidgets.QPushButton("Voir les métriques")
-        self.metricsButton.setMinimumHeight(40)
+        self.metricsButton.setMinimumHeight(15)
         self.metricsButton.setEnabled(False)  # Désactivé par défaut
         self.buttonLayout.addWidget(self.metricsButton)
         
@@ -154,7 +157,7 @@ class SearchPage(QtWidgets.QWidget):
         
         # Bouton Retour en bas de la page
         self.backButton = QtWidgets.QPushButton("Retour à l'accueil")
-        self.backButton.setMinimumHeight(40)
+        self.backButton.setMinimumHeight(30)
         font = QtGui.QFont()
         font.setPointSize(12)
         self.backButton.setFont(font)
@@ -172,22 +175,36 @@ class SearchPage(QtWidgets.QWidget):
         
         # Connecter les changements de descripteurs à la mise à jour des distances
         self.checkBoxColor.stateChanged.connect(self.updateDistanceOptions)
+        self.checkBoxHSV.stateChanged.connect(self.updateDistanceOptions)
+        self.checkBoxGLCM.stateChanged.connect(self.updateDistanceOptions)
         self.checkBoxHOG.stateChanged.connect(self.updateDistanceOptions)
         self.checkBoxLBP.stateChanged.connect(self.updateDistanceOptions)
         self.checkBoxORB.stateChanged.connect(self.updateDistanceOptions)
+        self.checkBoxSIFT.stateChanged.connect(self.updateDistanceOptions)
     
     def updateDistanceOptions(self):
         """Met à jour les options de distance en fonction des descripteurs sélectionnés"""
         self.distanceComboBox.clear()
         
-        # Options de base pour les descripteurs d'histogramme et HOG
-        if any([self.checkBoxColor.isChecked(), self.checkBoxHOG.isChecked(), 
-                self.checkBoxLBP.isChecked(), self.checkBoxORB.isChecked()]):
-            self.distanceComboBox.addItems(["Cosinus", "Euclidienne", "Manhattan"])
+        # Toujours ajouter la distance Euclidienne comme option par défaut
+        self.distanceComboBox.addItem("Euclidienne")
         
-        # Si aucun descripteur n'est sélectionné, ajouter l'option par défaut
-        if self.distanceComboBox.count() == 0:
-            self.distanceComboBox.addItem("Euclidienne")
+        # Ajouter les distances communes pour la plupart des descripteurs
+        self.distanceComboBox.addItems(["Manhattan", "Cosinus"])
+        
+        # Ajouter des distances spécifiques pour les descripteurs d'histogramme
+        if any([self.checkBoxColor.isChecked(), self.checkBoxHSV.isChecked()]):
+            self.distanceComboBox.addItems(["Chi carre", "Intersection", "Bhattacharyya", "Correlation"])
+        
+        # Ajouter des distances spécifiques pour ORB et SIFT
+        if any([self.checkBoxORB.isChecked(), self.checkBoxSIFT.isChecked()]):
+            self.distanceComboBox.addItem("Brute force")
+            self.distanceComboBox.addItem("Flann")
+        
+        # Sélectionner Euclidienne par défaut
+        index = self.distanceComboBox.findText("Euclidienne")
+        if index >= 0:
+            self.distanceComboBox.setCurrentIndex(index)
     
     def loadImage(self):
         """Charge une image requête"""
@@ -340,9 +357,12 @@ class SearchPage(QtWidgets.QWidget):
         # Vérifier qu'au moins un descripteur est sélectionné
         if not any([
             self.checkBoxColor.isChecked(),
+            self.checkBoxHSV.isChecked(),
+            self.checkBoxGLCM.isChecked(),
             self.checkBoxHOG.isChecked(),
             self.checkBoxLBP.isChecked(),
-            self.checkBoxORB.isChecked()
+            self.checkBoxORB.isChecked(),
+            self.checkBoxSIFT.isChecked()
         ]):
             showDialog()
             return
@@ -354,9 +374,12 @@ class SearchPage(QtWidgets.QWidget):
         # Charger les descripteurs sélectionnés
         total_descriptors = sum([
             self.checkBoxColor.isChecked(),
+            self.checkBoxHSV.isChecked(),
+            self.checkBoxGLCM.isChecked(),
             self.checkBoxHOG.isChecked(),
             self.checkBoxLBP.isChecked(),
-            self.checkBoxORB.isChecked()
+            self.checkBoxORB.isChecked(),
+            self.checkBoxSIFT.isChecked()
         ])
         
         progress = 0
@@ -366,10 +389,10 @@ class SearchPage(QtWidgets.QWidget):
         if self.checkBoxColor.isChecked():
             self.progressBar.setValue(0)  # Réinitialiser pour chaque type de descripteur
             QtWidgets.QApplication.processEvents()
-            features_color = self.loadFeatureType('Histogramme de couleurs', 1)
+            features_color = self.loadFeatureType('BGR', 1)
             if features_color:  # Vérifier si des descripteurs ont été chargés
-                self.features['Histogramme de couleurs'] = features_color
-                loaded_descriptors.append('Histogramme de couleurs')
+                self.features['BGR'] = features_color
+                loaded_descriptors.append('BGR')
             progress += 1
             self.progressBar.setValue(int(100 * progress / total_descriptors))
             QtWidgets.QApplication.processEvents()
@@ -406,6 +429,42 @@ class SearchPage(QtWidgets.QWidget):
             if features_orb:  # Vérifier si des descripteurs ont été chargés
                 self.features['ORB'] = features_orb
                 loaded_descriptors.append('ORB')
+            progress += 1
+            self.progressBar.setValue(int(100 * progress / total_descriptors))
+            QtWidgets.QApplication.processEvents()
+        
+        # Charger Histogramme HSV
+        if self.checkBoxHSV.isChecked():
+            self.progressBar.setValue(0)  # Réinitialiser pour chaque type de descripteur
+            QtWidgets.QApplication.processEvents()
+            features_hsv = self.loadFeatureType('HSV', 5)
+            if features_hsv:  # Vérifier si des descripteurs ont été chargés
+                self.features['HSV'] = features_hsv
+                loaded_descriptors.append('HSV')
+            progress += 1
+            self.progressBar.setValue(int(100 * progress / total_descriptors))
+            QtWidgets.QApplication.processEvents()
+        
+        # Charger GLCM
+        if self.checkBoxGLCM.isChecked():
+            self.progressBar.setValue(0)  # Réinitialiser pour chaque type de descripteur
+            QtWidgets.QApplication.processEvents()
+            features_glcm = self.loadFeatureType('GLCM', 6)
+            if features_glcm:  # Vérifier si des descripteurs ont été chargés
+                self.features['GLCM'] = features_glcm
+                loaded_descriptors.append('GLCM')
+            progress += 1
+            self.progressBar.setValue(int(100 * progress / total_descriptors))
+            QtWidgets.QApplication.processEvents()
+        
+        # Charger SIFT
+        if self.checkBoxSIFT.isChecked():
+            self.progressBar.setValue(0)  # Réinitialiser pour chaque type de descripteur
+            QtWidgets.QApplication.processEvents()
+            features_sift = self.loadFeatureType('SIFT', 7)
+            if features_sift:  # Vérifier si des descripteurs ont été chargés
+                self.features['SIFT'] = features_sift
+                loaded_descriptors.append('SIFT')
             progress += 1
             self.progressBar.setValue(int(100 * progress / total_descriptors))
             QtWidgets.QApplication.processEvents()
@@ -464,7 +523,7 @@ class SearchPage(QtWidgets.QWidget):
         # Réinitialiser la barre de progression
         self.progressBar.setValue(0)
         
-        # Réinitialiser les métriques au début de la recherche (pas à la fin)
+        # Réinitialiser les métriques au début de la recherche
         self.metrics_data = {}
         self.metricsButton.setEnabled(False)
         
@@ -503,7 +562,7 @@ class SearchPage(QtWidgets.QWidget):
             QtWidgets.QApplication.processEvents()  # Forcer la mise à jour de l'interface
             
             # Déterminer l'algo_choice en fonction du type de descripteur
-            if desc_type == 'Histogramme de couleurs':
+            if desc_type == 'BGR':
                 algo_choice = 1
             elif desc_type == 'HOG':
                 algo_choice = 2
@@ -511,6 +570,12 @@ class SearchPage(QtWidgets.QWidget):
                 algo_choice = 3
             elif desc_type == 'ORB':
                 algo_choice = 4
+            elif desc_type == 'HSV':
+                algo_choice = 5
+            elif desc_type == 'GLCM':
+                algo_choice = 6
+            elif desc_type == 'SIFT':
+                algo_choice = 7
             else:
                 processed_descriptors += 1
                 continue
@@ -522,11 +587,25 @@ class SearchPage(QtWidgets.QWidget):
                 req_features = extractReqFeatures(self.image_path, algo_choice)
                 print(f"Caractéristiques extraites pour l'image requête: {req_features.shape if hasattr(req_features, 'shape') else 'None'}")
                 
-                # Adapter la distance pour ORB et SIFT
+                # Vérifier si les dimensions sont compatibles avec les descripteurs de la base
+                if len(features) > 0:
+                    sample_feature = features[0][1]  # Prendre le premier descripteur comme exemple
+                    if hasattr(req_features, 'shape') and hasattr(sample_feature, 'shape'):
+                        if req_features.shape != sample_feature.shape:
+                            print(f"Dimensions incompatibles: {req_features.shape} vs {sample_feature.shape}")
+                            # Redimensionner le descripteur de la requête pour correspondre à la base
+                            req_features = np.resize(req_features, sample_feature.shape)
+                            print(f"Descripteur redimensionné à: {req_features.shape}")
+                
+                # Adapter la distance pour les descripteurs spécifiques
                 current_distance = distance_name
-                if desc_type == 'ORB' and distance_name != "Brute force":
+                if desc_type in ['ORB', 'SIFT'] and distance_name not in ["Brute force", "Flann"]:
                     current_distance = "Brute force"
-                    print(f"Distance adaptée pour ORB: {current_distance}")
+                    print(f"Distance adaptée pour {desc_type}: {current_distance}")
+                elif desc_type in ['BGR', 'HSV'] and distance_name in ["Chi carre", "Intersection", "Bhattacharyya", "Correlation"]:
+                    # Utiliser la distance spécifique pour les histogrammes
+                    current_distance = distance_name
+                    print(f"Utilisation de la distance {current_distance} pour {desc_type}")
                 
                 # Rechercher les voisins
                 neighbors = getkVoisins(features, req_features, k, current_distance)
@@ -547,7 +626,7 @@ class SearchPage(QtWidgets.QWidget):
             QtWidgets.QApplication.processEvents()  # Forcer la mise à jour de l'interface
         
         # Trier les résultats combinés par distance
-        if distance_name in ["Cosinus", "Euclidienne", "Manhattan"]:
+        if distance_name in ["Cosinus"]:
             combined_results.sort(key=lambda x: -x[1])  # Tri décroissant pour les mesures de similarité
         else:
             combined_results.sort(key=lambda x: x[1])  # Tri croissant pour les mesures de distance
@@ -566,9 +645,8 @@ class SearchPage(QtWidgets.QWidget):
             self.calculateMetrics()
         else:
             print("Aucun résultat à afficher, impossible de calculer les métriques")
-            # Réinitialiser les métriques
-            for i in range(5):
-                self.metricsTable.setItem(i, 1, QtWidgets.QTableWidgetItem("N/A"))
+            # Réinitialiser les métriques sans référence à self.metricsTable
+            self.metrics_data = {}
         
         # Finaliser la barre de progression
         self.progressBar.setValue(100)

@@ -84,6 +84,18 @@ def distance_f(l1, l2, distanceName):
     
     if distanceName == "Euclidienne":
         distance = euclidean(l1, l2)
+    elif distanceName == "Cosinus":
+        # Calculer la similarité cosinus
+        norm_l1 = np.linalg.norm(l1)
+        norm_l2 = np.linalg.norm(l2)
+        if norm_l1 == 0 or norm_l2 == 0:
+            distance = 0  # Si l'un des vecteurs est nul, la similarité est 0
+        else:
+            dot_product = np.dot(l1, l2)
+            distance = dot_product / (norm_l1 * norm_l2)  # Similarité cosinus (plus élevée = plus similaire)
+    elif distanceName == "Manhattan":
+        # Distance de Manhattan (L1)
+        distance = np.sum(np.abs(l1 - l2))
     elif distanceName in ["Correlation", "Chi carre", "Intersection", "Bhattacharyya"]:
         # Pour les histogrammes et descripteurs 1D (BGR, HSV, GLCM, LBP)
         if len(l1.shape) == 1 and len(l2.shape) == 1:
@@ -108,6 +120,11 @@ def distance_f(l1, l2, distanceName):
         distance = bruteForceMatching(l1, l2)
     elif distanceName == "Flann":
         distance = flann(l1, l2)
+    else:
+        # Si la distance n'est pas reconnue, utiliser la distance euclidienne par défaut
+        print(f"Distance '{distanceName}' non reconnue, utilisation de la distance euclidienne par défaut")
+        distance = euclidean(l1, l2)
+        
     return distance
 
 def getkVoisins(lfeatures, req, k, distanceName): 

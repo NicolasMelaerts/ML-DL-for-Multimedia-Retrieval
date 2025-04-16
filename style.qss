@@ -10,10 +10,10 @@ QPushButton {
     background-color: #3498db;
     color: white;
     border: none;
-    padding: 5px 10px;
+    padding: 3px 8px;  /* Réduit le padding vertical et horizontal */
     border-radius: 4px;
     font-weight: bold;
-    min-height: 28px;
+    min-height: 22px;  /* Réduit la hauteur minimale */
     font-size: 12px;
 }
 
@@ -43,27 +43,29 @@ QLineEdit, QTextEdit {
 QLineEdit:focus, QTextEdit:focus {
     border: 1px solid #3498db;
 }
-
 /* Style des menus déroulants */
 QComboBox {
     border: 1px solid #bdc3c7;
     border-radius: 3px;
     padding: 2px 5px;
-    background-color: white;
+    background-color: #e0f7fa;  /* Fond bleu clair */
     min-height: 24px;
+    color: #01579b;  /* Texte bleu foncé */
 }
 
 QComboBox:hover {
-    border: 1px solid #3498db;
+    border: 1px solid #0288d1;  /* Bordure bleue vif au survol */
+    background-color: #b3e5fc;  /* Fond bleu plus intense au survol */
 }
 
 QComboBox::drop-down {
     subcontrol-origin: padding;
     subcontrol-position: top right;
     width: 20px;
-    border-left: 1px solid #bdc3c7;
+    border-left: 1px solid #0288d1;  /* Bordure bleue */
     border-top-right-radius: 3px;
     border-bottom-right-radius: 3px;
+    background-color: #81d4fa;  /* Fond bleu pour la flèche */
 }
 
 QComboBox::down-arrow {
@@ -72,13 +74,30 @@ QComboBox::down-arrow {
     height: 12px;
 }
 
+/* Style pour la liste déroulante */
 QComboBox QAbstractItemView {
-    border: 1px solid #bdc3c7;
-    selection-background-color: #3498db;
+    border: 2px solidrgb(0, 47, 255);
+    selection-background-color:rgb(0, 8, 255);
     selection-color: white;
-    background-color: white;
+    background-color: #e1f5fe;  /* Fond très légèrement bleu */
 }
 
+/* Style pour les éléments de la liste */
+QComboBox QAbstractItemView::item {
+    background-color:rgb(255, 255, 255);  /* Fond bleu clair pour tous les éléments */
+    color:rgb(0, 66, 153);  /* Texte bleu foncé */
+    padding: 5px;
+}
+
+QComboBox QAbstractItemView::item:hover {
+    background-color:rgb(136, 186, 255);  /* Fond bleu moyen au survol */
+    color: white;
+}
+
+QComboBox QAbstractItemView::item:selected {
+    background-color:rgb(0, 145, 255);  /* Fond bleu vif pour l'élément sélectionné */
+    color: white;
+}
 /* Style des checkboxes */
 QCheckBox {
     spacing: 5px;

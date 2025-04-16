@@ -20,3 +20,6 @@ export DISPLAY=10.102.233.241:0
 xhost + 10.102.233.241
 
 docker run -it --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v /Users/nicolasmelaerts/Projet:/opt/TP mon-pyqt-designer
+
+
+Important : pip install gdown

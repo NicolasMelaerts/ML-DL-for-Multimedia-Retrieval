@@ -588,7 +588,7 @@ class DeepSearchPage(QtWidgets.QWidget):
     
     def showMetricsWindow(self):
         """Affiche la fenêtre des métriques d'évaluation"""
-        from search_page import MetricsWindow  # Importer la classe MetricsWindow
+        from Projet.search_page import MetricsWindow  # Importer la classe MetricsWindow
         metrics_window = MetricsWindow(self, self.metrics_data)
         metrics_window.exec_()
 
