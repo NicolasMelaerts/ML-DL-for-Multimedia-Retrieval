@@ -28,7 +28,11 @@ COPY requirements.txt .
 # RUN chmod +x download_and_unzip.sh && ./download_and_unzip.sh
 
 # Installer les dépendances Python
-RUN pip install --no-cache-dir sentence-transformers
+#RUN pip install --no-cache-dir sentence-transformers
+
+WORKDIR /opt/TP
+
+COPY . .
 
 # Définir le fichier principal à lancer
 CMD ["python", "main.py"]
