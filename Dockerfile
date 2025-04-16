@@ -20,6 +20,7 @@ WORKDIR /opt/TP
 # Copier le script de téléchargement
 COPY download_and_unzip.sh .
 
+
 # Copier le fichier requirements.txt
 COPY requirements.txt .
 
@@ -27,7 +28,7 @@ COPY requirements.txt .
 # RUN chmod +x download_and_unzip.sh && ./download_and_unzip.sh
 
 # Installer les dépendances Python
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir sentence-transformers
 
 # Définir le fichier principal à lancer
 CMD ["python", "main.py"]
