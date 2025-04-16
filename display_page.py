@@ -11,6 +11,7 @@ class DisplayPage(QtWidgets.QWidget):
         super(DisplayPage, self).__init__(parent)
         self.setupUi()
         self.list_images = []
+        self.current_index = -1
         
     def setupUi(self):
         self.setObjectName("DisplayPage")
@@ -39,13 +40,10 @@ class DisplayPage(QtWidgets.QWidget):
         # Espace
         self.mainLayout.addSpacing(10)
         
-        # Layout pour l'affichage des images et la liste
-        self.displayLayout = QtWidgets.QHBoxLayout()
-        
         # Zone d'affichage de l'image
         self.imageFrame = QtWidgets.QFrame()
         self.imageFrame.setFrameShape(QtWidgets.QFrame.Box)
-        self.imageFrame.setMinimumSize(500, 400)
+        self.imageFrame.setMinimumSize(600, 400)
         
         # Layout pour l'image
         self.imageLayout = QtWidgets.QVBoxLayout(self.imageFrame)
@@ -56,18 +54,52 @@ class DisplayPage(QtWidgets.QWidget):
         self.image.setText("Aucune image chargée")
         self.imageLayout.addWidget(self.image)
         
-        # Ajouter le cadre de l'image au layout d'affichage
-        self.displayLayout.addWidget(self.imageFrame)
+        # Ajouter le cadre de l'image au layout principal
+        self.mainLayout.addWidget(self.imageFrame)
         
-        # Liste des images
-        self.tableView = QtWidgets.QTableView()
-        self.tableView.setMinimumWidth(300)
-        self.tableView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.tableView.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.displayLayout.addWidget(self.tableView)
+        # Layout pour les contrôles de navigation
+        self.navigationLayout = QtWidgets.QHBoxLayout()
         
-        # Ajouter le layout d'affichage au layout principal
-        self.mainLayout.addLayout(self.displayLayout)
+        # Bouton précédent
+        self.prevButton = QtWidgets.QPushButton("◀ Précédente")
+        self.prevButton.setMinimumHeight(30)
+        self.prevButton.setEnabled(False)
+        self.navigationLayout.addWidget(self.prevButton)
+        
+        # Affichage du numéro d'image
+        self.imageCountLabel = QtWidgets.QLabel("0 / 0")
+        self.imageCountLabel.setAlignment(QtCore.Qt.AlignCenter)
+        font = QtGui.QFont()
+        font.setBold(True)
+        self.imageCountLabel.setFont(font)
+        self.navigationLayout.addWidget(self.imageCountLabel)
+        
+        # Bouton suivant
+        self.nextButton = QtWidgets.QPushButton("Suivante ▶")
+        self.nextButton.setMinimumHeight(30)
+        self.nextButton.setEnabled(False)
+        self.navigationLayout.addWidget(self.nextButton)
+        
+        # Ajouter les contrôles de navigation au layout principal
+        self.mainLayout.addLayout(self.navigationLayout)
+        
+        # Espace
+        self.mainLayout.addSpacing(10)
+        
+        # Layout pour la liste déroulante
+        self.comboLayout = QtWidgets.QHBoxLayout()
+        
+        # Label pour la liste
+        self.comboLabel = QtWidgets.QLabel("Sélectionner une image:")
+        self.comboLayout.addWidget(self.comboLabel)
+        
+        # Liste déroulante des images
+        self.imageComboBox = QtWidgets.QComboBox()
+        self.imageComboBox.setMinimumWidth(400)
+        self.comboLayout.addWidget(self.imageComboBox)
+        
+        # Ajouter la liste déroulante au layout principal
+        self.mainLayout.addLayout(self.comboLayout)
         
         # Espace
         self.mainLayout.addSpacing(20)
@@ -79,6 +111,9 @@ class DisplayPage(QtWidgets.QWidget):
         
         # Connexion des signaux
         self.loadButton.clicked.connect(self.loadImages)
+        self.prevButton.clicked.connect(self.showPreviousImage)
+        self.nextButton.clicked.connect(self.showNextImage)
+        self.imageComboBox.currentIndexChanged.connect(self.onComboBoxChanged)
     
     def loadImages(self):
         self.Dossier_images = QtWidgets.QFileDialog.getExistingDirectory(
@@ -104,36 +139,57 @@ class DisplayPage(QtWidgets.QWidget):
                 "Aucune image trouvée dans le dossier sélectionné"
             )
             return
-            
-        # Afficher la première image
-        pixmap = QtGui.QPixmap(self.list_images[0])
-        pixmap = pixmap.scaled(self.image.width(), self.image.height(), 
-                              QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
-        self.image.setPixmap(pixmap)
         
-        # Créer le modèle pour le TableView
-        model = QtGui.QStandardItemModel()
-        model.setHorizontalHeaderLabels(["Nom du fichier"])
+        # Trier les images par nom
+        self.list_images.sort()
         
-        # Ajouter les images à la liste
+        # Remplir la liste déroulante
+        self.imageComboBox.clear()
         for file_path in self.list_images:
-            item = QtGui.QStandardItem(os.path.basename(file_path))
-            item.setData(file_path, QtCore.Qt.UserRole + 1)
-            item.setEditable(False)
-            model.appendRow(item)
+            self.imageComboBox.addItem(os.path.basename(file_path), file_path)
         
-        self.tableView.setModel(model)
+        # Activer les boutons de navigation
+        self.updateNavigationButtons()
         
-        # Connecter le signal de sélection
-        self.tableView.selectionModel().currentChanged.connect(self.displayImage)
+        # Afficher la première image
+        self.current_index = 0
+        self.displayCurrentImage()
     
-    def displayImage(self, current, previous):
-        if current.isValid():
-            file_path = current.data(QtCore.Qt.UserRole + 1)
-            if not file_path:
-                file_path = self.list_images[current.row()]
-                
+    def displayCurrentImage(self):
+        if 0 <= self.current_index < len(self.list_images):
+            file_path = self.list_images[self.current_index]
+            
+            # Mettre à jour la liste déroulante
+            self.imageComboBox.setCurrentIndex(self.current_index)
+            
+            # Mettre à jour le label de comptage
+            self.imageCountLabel.setText(f"{self.current_index + 1} / {len(self.list_images)}")
+            
+            # Afficher l'image
             pixmap = QtGui.QPixmap(file_path)
             pixmap = pixmap.scaled(self.image.width(), self.image.height(), 
                                   QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
-            self.image.setPixmap(pixmap) 
+            self.image.setPixmap(pixmap)
+            
+            # Mettre à jour les boutons de navigation
+            self.updateNavigationButtons()
+    
+    def showPreviousImage(self):
+        if self.current_index > 0:
+            self.current_index -= 1
+            self.displayCurrentImage()
+    
+    def showNextImage(self):
+        if self.current_index < len(self.list_images) - 1:
+            self.current_index += 1
+            self.displayCurrentImage()
+    
+    def onComboBoxChanged(self, index):
+        if index != self.current_index and index >= 0:
+            self.current_index = index
+            self.displayCurrentImage()
+    
+    def updateNavigationButtons(self):
+        # Activer/désactiver les boutons de navigation selon la position actuelle
+        self.prevButton.setEnabled(self.current_index > 0)
+        self.nextButton.setEnabled(self.current_index < len(self.list_images) - 1) 

@@ -6,7 +6,6 @@ Page de calcul des descripteurs
 from PyQt5 import QtCore, QtGui, QtWidgets
 import os
 from descriptors import (
-    showDialog, 
     generateHistogramme_Color, 
     generateHistogramme_HSV, 
     generateSIFT, 
@@ -15,6 +14,15 @@ from descriptors import (
     generateLBP,
     generateHOG
 )
+
+# Ajouter la fonction showDialog qui était dans descriptors.py
+def showDialog():
+    msgBox = QtWidgets.QMessageBox()
+    msgBox.setIcon(QtWidgets.QMessageBox.Information)
+    msgBox.setText("Merci de sélectionner un descripteur via le menu ci-dessus")
+    msgBox.setWindowTitle("Pas de Descripteur sélectionné")
+    msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+    returnValue = msgBox.exec()
 
 class DescriptorsPage(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -63,7 +71,7 @@ class DescriptorsPage(QtWidgets.QWidget):
                    "• Gère l'orientation pour plus de robustesse\n"
                    "• Efficace en termes de calcul",
                    
-            "Hist Couleur": "Histogramme de Couleur BGR\n\n"
+            "Hist Couleur ": "Histogramme de Couleur BGR\n\n"
                            "• Capture la distribution des couleurs (bleu, vert, rouge)\n"
                            "• Simple mais efficace pour décrire le contenu global\n"
                            "• Sensible aux changements d'illumination\n"
@@ -196,14 +204,24 @@ class DescriptorsPage(QtWidgets.QWidget):
             "HOG": self.checkBox_HOG
         }
         
+        # Vérifier si le dossier Descripteurs existe
+        if not os.path.exists("Descripteurs"):
+            return
+        
         for desc_name, checkbox in descriptors.items():
-            if os.path.exists(desc_name):
+            # Vérifier si le sous-dossier du descripteur existe dans le dossier Descripteurs
+            desc_path = os.path.join("Descripteurs", desc_name)
+            if os.path.exists(desc_path):
                 checkbox.setStyleSheet("color: green;")
                 checkbox.setToolTip(f"Le descripteur {desc_name} est déjà calculé")
                 self.logTextEdit.append(f"Descripteur {desc_name} déjà calculé")
             else:
                 checkbox.setStyleSheet("")
-                checkbox.setToolTip("")
+                checkbox.setToolTip(self.descriptors_info.get(desc_name, ""))
+    
+    # Ajouter une méthode pour mettre à jour la barre de progression
+    def update_progress(self, value):
+        self.progressBar.setValue(value)
     
     def extractFeatures(self):
         if not self.Dossier_images:
@@ -225,68 +243,75 @@ class DescriptorsPage(QtWidgets.QWidget):
         # Liste pour suivre les descripteurs calculés
         calculated_descriptors = []
         
-        # Utilisation des fonctions de `descriptors.py` selon les cases à cocher
+        # Utilisation des fonctions de `descriptors.py` avec notre méthode de callback
         if self.checkBox_HistCouleur.isChecked():
-            if os.path.exists("BGR"):
+            desc_path = os.path.join("Descripteurs", "BGR")
+            if os.path.exists(desc_path):
                 self.logTextEdit.append("Descripteur BGR déjà calculé, calcul ignoré")
             else:
                 self.currentDescriptorLabel.setText("Descripteur en cours: Histogramme Couleur")
                 self.logTextEdit.append("Calcul du descripteur Histogramme Couleur...")
-                generateHistogramme_Color(self.Dossier_images, self.progressBar)
+                generateHistogramme_Color(self.Dossier_images, self.update_progress)
                 calculated_descriptors.append("Histogramme Couleur")
         
         if self.checkBox_HistHSV.isChecked():
-            if os.path.exists("HSV"):
+            desc_path = os.path.join("Descripteurs", "HSV")
+            if os.path.exists(desc_path):
                 self.logTextEdit.append("Descripteur HSV déjà calculé, calcul ignoré")
             else:
                 self.currentDescriptorLabel.setText("Descripteur en cours: Histogramme HSV")
                 self.logTextEdit.append("Calcul du descripteur Histogramme HSV...")
-                generateHistogramme_HSV(self.Dossier_images, self.progressBar)
+                generateHistogramme_HSV(self.Dossier_images, self.update_progress)
                 calculated_descriptors.append("Histogramme HSV")
         
         if self.checkBox_SIFT.isChecked():
-            if os.path.exists("SIFT"):
+            desc_path = os.path.join("Descripteurs", "SIFT")
+            if os.path.exists(desc_path):
                 self.logTextEdit.append("Descripteur SIFT déjà calculé, calcul ignoré")
             else:
                 self.currentDescriptorLabel.setText("Descripteur en cours: SIFT")
                 self.logTextEdit.append("Calcul du descripteur SIFT...")
-                generateSIFT(self.Dossier_images, self.progressBar)
+                generateSIFT(self.Dossier_images, self.update_progress)
                 calculated_descriptors.append("SIFT")
         
         if self.checkBox_ORB.isChecked():
-            if os.path.exists("ORB"):
+            desc_path = os.path.join("Descripteurs", "ORB")
+            if os.path.exists(desc_path):
                 self.logTextEdit.append("Descripteur ORB déjà calculé, calcul ignoré")
             else:
                 self.currentDescriptorLabel.setText("Descripteur en cours: ORB")
                 self.logTextEdit.append("Calcul du descripteur ORB...")
-                generateORB(self.Dossier_images, self.progressBar)
+                generateORB(self.Dossier_images, self.update_progress)
                 calculated_descriptors.append("ORB")
         
         if self.checkBox_GLCM.isChecked():
-            if os.path.exists("GLCM"):
+            desc_path = os.path.join("Descripteurs", "GLCM")
+            if os.path.exists(desc_path):
                 self.logTextEdit.append("Descripteur GLCM déjà calculé, calcul ignoré")
             else:
                 self.currentDescriptorLabel.setText("Descripteur en cours: GLCM")
                 self.logTextEdit.append("Calcul du descripteur GLCM...")
-                generateGLCM(self.Dossier_images, self.progressBar)
+                generateGLCM(self.Dossier_images, self.update_progress)
                 calculated_descriptors.append("GLCM")
         
         if self.checkBox_LBP.isChecked():
-            if os.path.exists("LBP"):
+            desc_path = os.path.join("Descripteurs", "LBP")
+            if os.path.exists(desc_path):
                 self.logTextEdit.append("Descripteur LBP déjà calculé, calcul ignoré")
             else:
                 self.currentDescriptorLabel.setText("Descripteur en cours: LBP")
                 self.logTextEdit.append("Calcul du descripteur LBP...")
-                generateLBP(self.Dossier_images, self.progressBar)
+                generateLBP(self.Dossier_images, self.update_progress)
                 calculated_descriptors.append("LBP")
         
         if self.checkBox_HOG.isChecked():
-            if os.path.exists("HOG"):
+            desc_path = os.path.join("Descripteurs", "HOG")
+            if os.path.exists(desc_path):
                 self.logTextEdit.append("Descripteur HOG déjà calculé, calcul ignoré")
             else:
                 self.currentDescriptorLabel.setText("Descripteur en cours: HOG")
                 self.logTextEdit.append("Calcul du descripteur HOG...")
-                generateHOG(self.Dossier_images, self.progressBar)
+                generateHOG(self.Dossier_images, self.update_progress)
                 calculated_descriptors.append("HOG")
 
         # Réinitialiser le label du descripteur en cours

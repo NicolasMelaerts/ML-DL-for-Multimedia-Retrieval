@@ -125,3 +125,12 @@ def getkVoisins(lfeatures, req, k, distanceName):
     for i in range(min(k, len(ldistances))): 
         lvoisins.append(ldistances[i]) 
     return lvoisins
+
+def getkVoisins_deep(features_dict, query_name, k):
+    query_feature = features_dict[query_name]
+    distances = []
+    for name, feature_vector in features_dict.items():
+        dist = euclidean(query_feature, feature_vector)  # Calcul de la distance
+        distances.append((name, dist))
+    distances.sort(key=lambda x: x[1])
+    return distances[:k]

@@ -1,0 +1,763 @@
+/* Style global */
+QWidget {
+    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #e0f7fa, stop:1 #bbdefb);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
+}
+
+/* Style des boutons */
+QPushButton {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-weight: bold;
+    min-height: 28px;
+    font-size: 12px;
+}
+
+QPushButton:hover {
+    background-color: #2980b9;
+}
+
+QPushButton:pressed {
+    background-color: #1c6ea4;
+}
+
+/* Style des étiquettes */
+QLabel {
+    color: #2c3e50;
+    margin-bottom: 2px;
+}
+
+/* Style des champs de texte */
+QLineEdit, QTextEdit {
+    border: 1px solid #bdc3c7;
+    padding: 2px 5px;
+    border-radius: 3px;
+    background-color: white;
+    min-height: 24px;
+}
+
+QLineEdit:focus, QTextEdit:focus {
+    border: 1px solid #3498db;
+}
+
+/* Style des menus déroulants */
+QComboBox {
+    border: 1px solid #bdc3c7;
+    border-radius: 3px;
+    padding: 2px 5px;
+    background-color: white;
+    min-height: 24px;
+}
+
+QComboBox:hover {
+    border: 1px solid #3498db;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 20px;
+    border-left: 1px solid #bdc3c7;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+QComboBox::down-arrow {
+    image: url(down_arrow.png);
+    width: 12px;
+    height: 12px;
+}
+
+QComboBox QAbstractItemView {
+    border: 1px solid #bdc3c7;
+    selection-background-color: #3498db;
+    selection-color: white;
+    background-color: white;
+}
+
+/* Style des checkboxes */
+QCheckBox {
+    spacing: 5px;
+}
+
+QCheckBox::indicator {
+    width: 18px;
+    height: 18px;
+}
+
+QCheckBox::indicator:unchecked {
+    border: 2px solid #bdc3c7;
+    background-color: white;
+    border-radius: 3px;
+}
+
+QCheckBox::indicator:checked {
+    border: 2px solid #3498db;
+    background-color: #3498db;
+    border-radius: 3px;
+    image: url(checkmark.png);
+}
+
+QCheckBox::indicator:hover {
+    border: 2px solid #2980b9;
+}
+
+/* Style des barres de progression */
+QProgressBar {
+    border: 1px solid #bdc3c7;
+    border-radius: 5px;
+    text-align: center;
+    background-color: white;
+    height: 15px;
+}
+
+QProgressBar::chunk {
+    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #3498db, stop:1 #2980b9);
+    border-radius: 4px;
+}
+
+/* Style des barres de défilement */
+QScrollBar:vertical {
+    border: none;
+    background: #f0f0f0;
+    width: 10px;
+    margin: 0px 0px 0px 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: #c0c0c0;
+    min-height: 20px;
+    border-radius: 5px;
+}
+
+/* Style des onglets */
+QTabWidget::pane {
+    border: 1px solid #bdc3c7;
+    background-color: white;
+}
+
+QTabBar::tab {
+    background-color: #ecf0f1;
+    padding: 8px 12px;
+    margin-right: 2px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+QTabBar::tab:selected {
+    background-color: white;
+    border: 1px solid #bdc3c7;
+    border-bottom-color: white;
+}
+
+/* Style des groupes */
+QGroupBox {
+    border: 1px solid #bdc3c7;
+    border-radius: 5px;
+    margin-top: 15px;
+    padding-top: 15px;
+    font-weight: bold;
+    background-color: rgba(255, 255, 255, 150);
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 5px;
+    color: #2c3e50;
+}
+
+/* Style des listes */
+QListView {
+    background-color: white;
+    border: 1px solid #bdc3c7;
+    border-radius: 3px;
+}
+
+QListView::item {
+    padding: 5px;
+}
+
+QListView::item:selected {
+    background-color: #3498db;
+    color: white;
+}
+
+/* Style des tableaux */
+QTableView {
+    background-color: white;
+    border: 1px solid #bdc3c7;
+    border-radius: 3px;
+    gridline-color: #ecf0f1;
+}
+
+QTableView::item:selected {
+    background-color: #3498db;
+    color: white;
+}
+
+QHeaderView::section {
+    background-color: #ecf0f1;
+    padding: 5px;
+    border: 1px solid #bdc3c7;
+    font-weight: bold;
+}
+
+/* Style des spinbox */
+QSpinBox, QDoubleSpinBox {
+    border: 1px solid #bdc3c7;
+    border-radius: 3px;
+    padding: 2px 5px;
+    background-color: white;
+    min-height: 24px;
+}
+
+/* Style des sliders */
+QSlider::groove:horizontal {
+    border: 1px solid #bdc3c7;
+    height: 8px;
+    background: #ecf0f1;
+    margin: 2px 0;
+    border-radius: 4px;
+}
+
+QSlider::handle:horizontal {
+    background: #3498db;
+    border: 1px solid #2980b9;
+    width: 18px;
+    margin: -2px 0;
+    border-radius: 9px;
+}
+
+/* Style des menus */
+QMenuBar {
+    background-color: #ecf0f1;
+}
+
+QMenuBar::item {
+    padding: 5px 10px;
+    background: transparent;
+}
+
+QMenuBar::item:selected {
+    background-color: #3498db;
+    color: white;
+}
+
+QMenu {
+    background-color: white;
+    border: 1px solid #bdc3c7;
+}
+
+QMenu::item {
+    padding: 5px 30px 5px 30px;
+}
+
+QMenu::item:selected {
+    background-color: #3498db;
+    color: white;
+}
+
+/* Style pour la page d'affichage des images */
+#DisplayPage {
+    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #e0f7fa, stop:1 #bbdefb);
+}
+
+/* Style pour le cadre d'image */
+#DisplayPage QFrame {
+    border: 2px solid #3498db;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 180);
+}
+
+/* Style pour les boutons de navigation */
+#DisplayPage QPushButton[text="◀ Précédente"], 
+#DisplayPage QPushButton[text="Suivante ▶"] {
+    background-color: #2980b9;
+    color: white;
+    border: none;
+    border-radius: 15px;
+    padding: 8px 16px;
+    font-weight: bold;
+    min-width: 120px;
+}
+
+#DisplayPage QPushButton[text="◀ Précédente"]:hover, 
+#DisplayPage QPushButton[text="Suivante ▶"]:hover {
+    background-color: #3498db;
+}
+
+#DisplayPage QPushButton[text="◀ Précédente"]:pressed, 
+#DisplayPage QPushButton[text="Suivante ▶"]:pressed {
+    background-color: #1c6ea4;
+}
+
+#DisplayPage QPushButton[text="◀ Précédente"]:disabled, 
+#DisplayPage QPushButton[text="Suivante ▶"]:disabled {
+    background-color: #bdc3c7;
+    color: #7f8c8d;
+}
+
+/* Style pour le compteur d'images */
+#DisplayPage QLabel[objectName="imageCountLabel"] {
+    color: #2c3e50;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 5px 10px;
+    background-color: rgba(255, 255, 255, 120);
+    border-radius: 10px;
+}
+
+/* Style pour la liste déroulante des images */
+#DisplayPage QComboBox {
+    border: 2px solid #3498db;
+    border-radius: 5px;
+    padding: 5px 10px;
+    background-color: white;
+    min-height: 30px;
+    font-size: 13px;
+}
+
+#DisplayPage QComboBox:hover {
+    border-color: #2980b9;
+    background-color: #ecf0f1;
+}
+
+#DisplayPage QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 25px;
+    border-left: 1px solid #3498db;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+#DisplayPage QComboBox::down-arrow {
+    image: url(down_arrow.png);
+    width: 14px;
+    height: 14px;
+}
+
+#DisplayPage QComboBox QAbstractItemView {
+    border: 1px solid #3498db;
+    selection-background-color: #3498db;
+    selection-color: white;
+    background-color: white;
+    outline: 0px;
+}
+
+/* Style pour le bouton de chargement d'images */
+#DisplayPage QPushButton[text="Charger un dossier d'images"] {
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+    font-weight: bold;
+}
+
+#DisplayPage QPushButton[text="Charger un dossier d'images"]:hover {
+    background-color: #2ecc71;
+}
+
+#DisplayPage QPushButton[text="Charger un dossier d'images"]:pressed {
+    background-color: #219653;
+}
+
+/* Style pour le bouton de retour */
+#DisplayPage QPushButton[text="Retour à l'accueil"] {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+    font-weight: bold;
+}
+
+#DisplayPage QPushButton[text="Retour à l'accueil"]:hover {
+    background-color: #f44336;
+}
+
+#DisplayPage QPushButton[text="Retour à l'accueil"]:pressed {
+    background-color: #c0392b;
+}
+
+/* Style pour le titre */
+#DisplayPage QLabel[objectName="titleLabel"] {
+    color: #2c3e50;
+    font-size: 22px;
+    font-weight: bold;
+    padding: 10px;
+}
+
+/* Style pour la page d'accueil */
+#HomePage {
+    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #e0f7fa, stop:1 #bbdefb);
+}
+
+#HomePage QLabel[objectName="titleLabel"] {
+    color: #2c3e50;
+    font-size: 22px;
+    font-weight: bold;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 120);
+    border-radius: 10px;
+}
+
+#HomePage QPushButton {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 15px;
+    font-weight: bold;
+    font-size: 14px;
+    min-height: 50px;
+}
+
+#HomePage QPushButton:hover {
+    background-color: #2980b9;
+}
+
+#HomePage QPushButton:pressed {
+    background-color: #1c6ea4;
+}
+
+#HomePage QFrame {
+    border: 2px solid #3498db;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 180);
+    padding: 10px;
+}
+
+/* Style pour la page de calcul des descripteurs */
+#DescriptorsPage {
+    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #e0f7fa, stop:1 #bbdefb);
+}
+
+#DescriptorsPage QLabel[objectName="titleLabel"] {
+    color: #2c3e50;
+    font-size: 22px;
+    font-weight: bold;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 120);
+    border-radius: 10px;
+}
+
+#DescriptorsPage QLabel[objectName="dbStatusLabel"] {
+    font-size: 14px;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+#DescriptorsPage QLabel[objectName="dbStatusLabel"][styleSheet*="color: red"] {
+    background-color: rgba(255, 200, 200, 150);
+}
+
+#DescriptorsPage QLabel[objectName="dbStatusLabel"][styleSheet*="color: green"] {
+    background-color: rgba(200, 255, 200, 150);
+}
+
+#DescriptorsPage QPushButton {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+    font-weight: bold;
+    min-height: 40px;
+}
+
+#DescriptorsPage QPushButton:hover {
+    background-color: #2980b9;
+}
+
+#DescriptorsPage QPushButton:pressed {
+    background-color: #1c6ea4;
+}
+
+#DescriptorsPage QPushButton[objectName="charger"] {
+    background-color: #27ae60;
+}
+
+#DescriptorsPage QPushButton[objectName="charger"]:hover {
+    background-color: #2ecc71;
+}
+
+#DescriptorsPage QPushButton[objectName="charger"]:pressed {
+    background-color: #219653;
+}
+
+#DescriptorsPage QPushButton[objectName="backButton"] {
+    background-color: #e74c3c;
+}
+
+#DescriptorsPage QPushButton[objectName="backButton"]:hover {
+    background-color: #f44336;
+}
+
+#DescriptorsPage QPushButton[objectName="backButton"]:pressed {
+    background-color: #c0392b;
+}
+
+#DescriptorsPage QFrame {
+    border: 2px solid #3498db;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 180);
+    padding: 10px;
+}
+
+#DescriptorsPage QGroupBox {
+    border: 2px solid #3498db;
+    border-radius: 8px;
+    margin-top: 20px;
+    font-weight: bold;
+    background-color: rgba(255, 255, 255, 180);
+}
+
+#DescriptorsPage QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 10px;
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+#DescriptorsPage QCheckBox {
+    font-size: 13px;
+    padding: 5px;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 120);
+    margin: 3px;
+}
+
+#DescriptorsPage QCheckBox:hover {
+    background-color: rgba(255, 255, 255, 180);
+}
+
+#DescriptorsPage QCheckBox[styleSheet*="color: green"] {
+    background-color: rgba(200, 255, 200, 150);
+}
+
+#DescriptorsPage QProgressBar {
+    border: 1px solid #3498db;
+    border-radius: 5px;
+    text-align: center;
+    background-color: white;
+    height: 20px;
+}
+
+#DescriptorsPage QProgressBar::chunk {
+    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #3498db, stop:1 #2980b9);
+    border-radius: 4px;
+}
+
+#DescriptorsPage QTextEdit {
+    border: 2px solid #3498db;
+    border-radius: 5px;
+    background-color: white;
+    font-family: 'Consolas', 'Courier New', monospace;
+    padding: 5px;
+}
+
+/* Style pour les pages de recherche */
+#SearchPage, #TextSearchPage {
+    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #e0f7fa, stop:1 #bbdefb);
+}
+
+#SearchPage QLabel[objectName="titleLabel"], 
+#TextSearchPage QLabel[objectName="titleLabel"] {
+    color: #2c3e50;
+    font-size: 22px;
+    font-weight: bold;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 120);
+    border-radius: 10px;
+}
+
+#SearchPage QPushButton, 
+#TextSearchPage QPushButton {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+    font-weight: bold;
+    min-height: 40px;
+}
+
+#SearchPage QPushButton:hover, 
+#TextSearchPage QPushButton:hover {
+    background-color: #2980b9;
+}
+
+#SearchPage QPushButton:pressed, 
+#TextSearchPage QPushButton:pressed {
+    background-color: #1c6ea4;
+}
+
+#SearchPage QPushButton[objectName="backButton"], 
+#TextSearchPage QPushButton[objectName="backButton"] {
+    background-color: #e74c3c;
+}
+
+#SearchPage QPushButton[objectName="backButton"]:hover, 
+#TextSearchPage QPushButton[objectName="backButton"]:hover {
+    background-color: #f44336;
+}
+
+#SearchPage QPushButton[objectName="backButton"]:pressed, 
+#TextSearchPage QPushButton[objectName="backButton"]:pressed {
+    background-color: #c0392b;
+}
+
+#SearchPage QFrame, 
+#TextSearchPage QFrame {
+    border: 2px solid #3498db;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 180);
+    padding: 10px;
+}
+
+#SearchPage QComboBox, 
+#TextSearchPage QComboBox {
+    border: 2px solid #3498db;
+    border-radius: 5px;
+    padding: 5px 10px;
+    background-color: white;
+    min-height: 30px;
+    font-size: 13px;
+}
+
+#SearchPage QComboBox:hover, 
+#TextSearchPage QComboBox:hover {
+    border-color: #2980b9;
+    background-color: #ecf0f1;
+}
+
+#SearchPage QLineEdit, 
+#TextSearchPage QLineEdit {
+    border: 2px solid #3498db;
+    border-radius: 5px;
+    padding: 8px;
+    background-color: white;
+    min-height: 25px;
+    font-size: 13px;
+}
+
+#SearchPage QLineEdit:focus, 
+#TextSearchPage QLineEdit:focus {
+    border-color: #2980b9;
+    background-color: #f8f9fa;
+}
+
+/* Style spécifique pour les petits boutons de navigation */
+QPushButton[text="..."] {
+    min-height: 24px;
+    min-width: 24px;
+    padding: 2px;
+    font-size: 10px;
+}
+
+/* Style spécifique pour le groupbox de configuration */
+#TextSearchPage QGroupBox[title="Configuration"] {
+    background-color: rgba(240, 248, 255, 180);
+    padding: 5px;
+    margin-bottom: 5px;
+}
+
+/* Style spécifique pour le groupbox de recherche */
+#TextSearchPage QGroupBox[title="Recherche"] {
+    background-color: rgba(240, 248, 255, 180);
+    padding: 5px;
+    margin-bottom: 5px;
+}
+
+/* Style spécifique pour le groupbox des résultats */
+#TextSearchPage QGroupBox[title="Résultats"] {
+    background-color: rgba(255, 255, 255, 180);
+    border: 2px solid #3498db;
+    border-radius: 8px;
+    padding: 5px;
+    margin-top: 5px;
+}
+
+/* Style pour le bouton de recherche - un peu plus grand que les autres */
+#TextSearchPage QPushButton[text="Rechercher"] {
+    min-height: 32px;
+    font-size: 13px;
+    font-weight: bold;
+    background-color: #2980b9;
+}
+
+/* Style pour les résultats d'image */
+#TextSearchPage QScrollArea {
+    background-color: transparent;
+    border: none;
+}
+
+#TextSearchPage QScrollArea QWidget {
+    background-color: transparent;
+}
+
+/* Style pour chaque résultat individuel */
+#TextSearchPage QLabel[text^="<b>Chemin:</b>"],
+#TextSearchPage QLabel[text^="<b>Description:</b>"],
+#TextSearchPage QLabel[text^="<b>Score de similarité:</b>"],
+#TextSearchPage QLabel[text^="<b>Animal:</b>"],
+#TextSearchPage QLabel[text^="<b>Race:</b>"] {
+    font-size: 11px;
+    padding: 2px;
+    margin: 0;
+}
+
+/* Réduire l'espacement entre les widgets dans le layout principal */
+#TextSearchPage > QVBoxLayout {
+    spacing: 5px;
+}
+
+/* Réduire la taille du titre pour économiser de l'espace vertical */
+#TextSearchPage QLabel[objectName="titleLabel"] {
+    font-size: 18px;
+    padding: 5px;
+    margin-bottom: 0;
+}
+
+/* Réduire la taille des groupbox Distance et Affichage */
+#SearchPage QGroupBox[title="Distance"],
+#SearchPage QGroupBox[title="Affichage"] {
+    max-height: 80px;
+    padding-top: 10px;
+    padding-bottom: 5px;
+}
+
+#SearchPage QGroupBox[title="Distance"] QComboBox,
+#SearchPage QGroupBox[title="Affichage"] QComboBox {
+    min-height: 20px;
+    padding: 1px 3px;
+    font-size: 11px;
+}
+
+/* Style pour le bouton des métriques */
+#SearchPage QPushButton[text="Voir les métriques"] {
+    background-color: #9b59b6;  /* Violet pour le distinguer */
+    color: white;
+}
+
+#SearchPage QPushButton[text="Voir les métriques"]:hover {
+    background-color: #8e44ad;
+}
+
+#SearchPage QPushButton[text="Voir les métriques"]:pressed {
+    background-color: #7d3c98;
+}
+
+#SearchPage QPushButton[text="Voir les métriques"]:disabled {
+    background-color: #d2b4de;
+    color: #ecf0f1;
+} 

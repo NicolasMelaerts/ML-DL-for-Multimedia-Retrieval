@@ -11,10 +11,8 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import time
-from descriptors import (
-    showDialog, 
-    extractReqFeatures
-)
+from descriptors import extractReqFeatures
+from descriptors_page import showDialog
 
 from distances import getkVoisins
 
@@ -28,6 +26,7 @@ class SearchPage(QtWidgets.QWidget):
         self.image_path = ""
         self.results = []
         self.class_counts = {}  # Pour stocker le nombre d'images par classe
+        self.metrics_data = {}  # Pour stocker les métriques d'évaluation
         
     def setupUi(self):
         self.setObjectName("SearchPage")
@@ -56,30 +55,21 @@ class SearchPage(QtWidgets.QWidget):
         
         # Sélection des descripteurs
         self.descriptorsGroup = QtWidgets.QGroupBox("Descripteurs")
-        self.descriptorsLayout = QtWidgets.QGridLayout(self.descriptorsGroup)
+        self.descriptorsLayout = QtWidgets.QVBoxLayout(self.descriptorsGroup)
         self.controlLayout.addWidget(self.descriptorsGroup)
         
         # Checkboxes pour les descripteurs
-        self.checkBoxBGR = QtWidgets.QCheckBox("BGR")
-        self.descriptorsLayout.addWidget(self.checkBoxBGR, 0, 0)
-        
-        self.checkBoxHSV = QtWidgets.QCheckBox("HSV")
-        self.descriptorsLayout.addWidget(self.checkBoxHSV, 0, 1)
-        
-        self.checkBoxSIFT = QtWidgets.QCheckBox("SIFT")
-        self.descriptorsLayout.addWidget(self.checkBoxSIFT, 1, 0)
-        
-        self.checkBoxORB = QtWidgets.QCheckBox("ORB")
-        self.descriptorsLayout.addWidget(self.checkBoxORB, 1, 1)
-        
-        self.checkBoxGLCM = QtWidgets.QCheckBox("GLCM")
-        self.descriptorsLayout.addWidget(self.checkBoxGLCM, 2, 0)
-        
-        self.checkBoxLBP = QtWidgets.QCheckBox("LBP")
-        self.descriptorsLayout.addWidget(self.checkBoxLBP, 2, 1)
+        self.checkBoxColor = QtWidgets.QCheckBox("Histogramme de couleurs")
+        self.descriptorsLayout.addWidget(self.checkBoxColor)
         
         self.checkBoxHOG = QtWidgets.QCheckBox("HOG")
-        self.descriptorsLayout.addWidget(self.checkBoxHOG, 3, 0)
+        self.descriptorsLayout.addWidget(self.checkBoxHOG)
+        
+        self.checkBoxLBP = QtWidgets.QCheckBox("LBP")
+        self.descriptorsLayout.addWidget(self.checkBoxLBP)
+        
+        self.checkBoxORB = QtWidgets.QCheckBox("ORB")
+        self.descriptorsLayout.addWidget(self.checkBoxORB)
         
         # Sélection de la distance
         self.distanceGroup = QtWidgets.QGroupBox("Distance")
@@ -87,7 +77,7 @@ class SearchPage(QtWidgets.QWidget):
         self.controlLayout.addWidget(self.distanceGroup)
         
         self.distanceComboBox = QtWidgets.QComboBox()
-        self.distanceComboBox.addItems(["Euclidienne", "Correlation", "Chi carre", "Intersection", "Bhattacharyya"])
+        self.distanceComboBox.addItems(["Cosinus", "Euclidienne", "Manhattan"])
         self.distanceLayout.addWidget(self.distanceComboBox)
         
         # Sélection du nombre de résultats
@@ -104,9 +94,9 @@ class SearchPage(QtWidgets.QWidget):
         self.buttonLayout = QtWidgets.QVBoxLayout(self.buttonPanel)
         self.topLayout.addWidget(self.buttonPanel)
         
-        self.loadDescriptorsButton = QtWidgets.QPushButton("Charger les descripteurs")
-        self.loadDescriptorsButton.setMinimumHeight(40)
-        self.buttonLayout.addWidget(self.loadDescriptorsButton)
+        self.loadFeaturesButton = QtWidgets.QPushButton("Charger les descripteurs")
+        self.loadFeaturesButton.setMinimumHeight(40)
+        self.buttonLayout.addWidget(self.loadFeaturesButton)
         
         self.loadImageButton = QtWidgets.QPushButton("Charger une image")
         self.loadImageButton.setMinimumHeight(40)
@@ -116,9 +106,11 @@ class SearchPage(QtWidgets.QWidget):
         self.searchButton.setMinimumHeight(40)
         self.buttonLayout.addWidget(self.searchButton)
         
-        self.backButton = QtWidgets.QPushButton("Retour")
-        self.backButton.setMinimumHeight(40)
-        self.buttonLayout.addWidget(self.backButton)
+        # Ajouter le bouton des métriques ici
+        self.metricsButton = QtWidgets.QPushButton("Voir les métriques")
+        self.metricsButton.setMinimumHeight(40)
+        self.metricsButton.setEnabled(False)  # Désactivé par défaut
+        self.buttonLayout.addWidget(self.metricsButton)
         
         # Ajouter un espace extensible pour pousser les boutons vers le haut
         self.buttonLayout.addStretch()
@@ -140,10 +132,10 @@ class SearchPage(QtWidgets.QWidget):
         self.bottomLayout = QtWidgets.QHBoxLayout()
         self.mainLayout.addLayout(self.bottomLayout)
         
-        # Panneau de résultats (gauche)
+        # Panneau de résultats (occupe tout l'espace)
         self.resultsPanel = QtWidgets.QGroupBox("Résultats de la Recherche")
         self.resultsLayout = QtWidgets.QVBoxLayout(self.resultsPanel)
-        self.bottomLayout.addWidget(self.resultsPanel, 3)  # Proportion 3
+        self.bottomLayout.addWidget(self.resultsPanel)
         
         # Scroll area pour les résultats
         self.scrollArea = QtWidgets.QScrollArea()
@@ -155,85 +147,43 @@ class SearchPage(QtWidgets.QWidget):
         
         self.resultsGrid = QtWidgets.QGridLayout(self.scrollContent)
         
-        # Panneau de métriques (droite)
-        self.metricsPanel = QtWidgets.QGroupBox("Métriques d'Évaluation")
-        self.metricsLayout = QtWidgets.QVBoxLayout(self.metricsPanel)
-        self.bottomLayout.addWidget(self.metricsPanel, 2)  # Proportion 2
-        
-        # Tableau des métriques avec plus d'espace
-        self.metricsTable = QtWidgets.QTableWidget(5, 2)
-        self.metricsTable.setHorizontalHeaderLabels(["Métrique", "Valeur"])
-        self.metricsTable.setVerticalHeaderLabels(["", "", "", "", ""])
-        
-        # Augmenter la hauteur des lignes pour voir toutes les données
-        self.metricsTable.verticalHeader().setDefaultSectionSize(30)
-        
-        # Définir une largeur minimale pour la colonne des valeurs
-        self.metricsTable.setColumnWidth(1, 150)
-        
-        # Définir une hauteur minimale pour le tableau
-        self.metricsTable.setMinimumHeight(180)
-        
-        # Remplir le tableau avec les noms des métriques
-        metrics = ["Rappel", "Précision", "AP", "MAP", "R-Precision"]
-        for i, metric in enumerate(metrics):
-            item = QtWidgets.QTableWidgetItem(metric)
-            self.metricsTable.setItem(i, 0, item)
-            
-            # Initialiser les valeurs à N/A
-            value_item = QtWidgets.QTableWidgetItem("N/A")
-            self.metricsTable.setItem(i, 1, value_item)
-        
-        # Étirer les colonnes pour remplir l'espace disponible
-        self.metricsTable.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-        self.metricsLayout.addWidget(self.metricsTable)
-        
-        # Courbe Rappel/Précision
-        self.rpFigure = Figure(figsize=(6, 5), dpi=100)
-        self.rpCanvas = FigureCanvas(self.rpFigure)
-        self.metricsLayout.addWidget(self.rpCanvas)
-        
         # Barre de progression
         self.progressBar = QtWidgets.QProgressBar()
         self.progressBar.setValue(0)
         self.mainLayout.addWidget(self.progressBar)
+        
+        # Bouton Retour en bas de la page
+        self.backButton = QtWidgets.QPushButton("Retour à l'accueil")
+        self.backButton.setMinimumHeight(40)
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.backButton.setFont(font)
+        self.mainLayout.addWidget(self.backButton)
         
         # Connecter les signaux
         self.connectSignals()
     
     def connectSignals(self):
         """Connecte les signaux aux slots"""
-        self.loadDescriptorsButton.clicked.connect(self.loadDescriptors)
+        self.loadFeaturesButton.clicked.connect(self.loadDescriptors)
         self.loadImageButton.clicked.connect(self.loadImage)
         self.searchButton.clicked.connect(self.search)
+        self.metricsButton.clicked.connect(self.showMetricsWindow)
         
         # Connecter les changements de descripteurs à la mise à jour des distances
-        self.checkBoxBGR.stateChanged.connect(self.updateDistanceOptions)
-        self.checkBoxHSV.stateChanged.connect(self.updateDistanceOptions)
-        self.checkBoxSIFT.stateChanged.connect(self.updateDistanceOptions)
-        self.checkBoxORB.stateChanged.connect(self.updateDistanceOptions)
-        self.checkBoxGLCM.stateChanged.connect(self.updateDistanceOptions)
-        self.checkBoxLBP.stateChanged.connect(self.updateDistanceOptions)
+        self.checkBoxColor.stateChanged.connect(self.updateDistanceOptions)
         self.checkBoxHOG.stateChanged.connect(self.updateDistanceOptions)
+        self.checkBoxLBP.stateChanged.connect(self.updateDistanceOptions)
+        self.checkBoxORB.stateChanged.connect(self.updateDistanceOptions)
     
     def updateDistanceOptions(self):
         """Met à jour les options de distance en fonction des descripteurs sélectionnés"""
         self.distanceComboBox.clear()
         
         # Options de base pour les descripteurs d'histogramme et HOG
-        if any([self.checkBoxBGR.isChecked(), self.checkBoxHSV.isChecked(), 
-                self.checkBoxGLCM.isChecked(), self.checkBoxLBP.isChecked(),
-                self.checkBoxHOG.isChecked()]):
-            self.distanceComboBox.addItems(["Euclidienne", "Correlation", "Chi carre", 
-                                           "Intersection", "Bhattacharyya"])
-        
-        # Options pour SIFT
-        if self.checkBoxSIFT.isChecked():
-            self.distanceComboBox.addItem("Flann")
-        
-        # Options pour ORB
-        if self.checkBoxORB.isChecked():
-            self.distanceComboBox.addItem("Brute force")
+        if any([self.checkBoxColor.isChecked(), self.checkBoxHOG.isChecked(), 
+                self.checkBoxLBP.isChecked(), self.checkBoxORB.isChecked()]):
+            self.distanceComboBox.addItems(["Cosinus", "Euclidienne", "Manhattan"])
         
         # Si aucun descripteur n'est sélectionné, ajouter l'option par défaut
         if self.distanceComboBox.count() == 0:
@@ -276,22 +226,35 @@ class SearchPage(QtWidgets.QWidget):
     def loadFeatureType(self, folder_name, algo_id):
         """Charge un type spécifique de descripteur depuis une structure plate"""
         features = []
-        folder_path = f'./{folder_name}'
+        
+        # Construire le chemin complet vers le sous-dossier du descripteur
+        folder_path = os.path.join('Descripteurs', folder_name)
+        
+        # Afficher les dossiers disponibles pour le débogage
+        print(f"Dossiers disponibles dans Descripteurs: {os.listdir('Descripteurs') if os.path.exists('Descripteurs') else 'Dossier Descripteurs non trouvé'}")
         
         # Vérifier si le dossier existe
         if not os.path.exists(folder_path):
-            print(f"Le dossier {folder_name} n'existe pas.")
+            print(f"Le dossier {folder_path} n'existe pas.")
             return []  # Retourner une liste vide sans afficher de message
         
         print(f"Chargement des descripteurs depuis {folder_path}")
         
-        # Obtenir la liste de tous les fichiers .txt dans le dossier
-        all_files = [f for f in os.listdir(folder_path) if f.endswith('.txt')]
+        # Obtenir la liste de tous les fichiers .txt dans le dossier qui correspondent au type demandé
+        all_files = [f for f in os.listdir(folder_path) if f.endswith('.txt') and f.startswith(f"Methode_{algo_id}_")]
+        
+        # Si aucun fichier ne correspond au format spécifique, essayer de charger tous les fichiers .txt
+        if not all_files:
+            all_files = [f for f in os.listdir(folder_path) if f.endswith('.txt')]
+            print(f"Aucun fichier au format Methode_{algo_id}_*.txt trouvé, chargement de tous les fichiers .txt")
+        
         total_files = len(all_files)
         
         if total_files == 0:
             print(f"Aucun fichier de descripteur trouvé dans {folder_path}")
             return []
+        
+        print(f"Nombre de fichiers trouvés: {total_files}")
         
         # Traiter les fichiers par lots pour mettre à jour la barre de progression
         batch_size = max(1, total_files // 100)  # Diviser en environ 100 lots
@@ -307,26 +270,43 @@ class SearchPage(QtWidgets.QWidget):
                     feature = np.loadtxt(data_path)
                     
                     # Extraire les informations du nom de fichier
-                    # Format attendu: animal_race_imagename.txt
+                    # Essayer différents formats possibles
                     parts = os.path.splitext(file_name)[0].split('_')
                     
-                    if len(parts) >= 3:
+                    # Format 1: Methode_1_animal_race_imagename.txt
+                    if len(parts) >= 4 and parts[0] == "Methode":
+                        animal = parts[2]
+                        breed = parts[3]
+                        image_name = '_'.join(parts[4:]) + '.jpg'
+                    # Format 2: animal_race_imagename.txt
+                    elif len(parts) >= 2:
                         animal = parts[0]
                         breed = parts[1]
                         image_name = '_'.join(parts[2:]) + '.jpg'
-                        
-                        # Construire le chemin de l'image
-                        image_path = os.path.join(self.filenames, animal, breed, image_name)
-                        
-                        if os.path.exists(image_path):
-                            features.append((image_path, feature))
-                        else:
-                            print(f"Image introuvable: {image_path}")
                     else:
                         print(f"Format de nom de fichier non reconnu: {file_name}")
+                        continue
+                    
+                    # Construire le chemin de l'image
+                    image_path = os.path.join(self.filenames, animal, breed, image_name)
+                    
+                    if os.path.exists(image_path):
+                        features.append((image_path, feature))
+                    else:
+                        print(f"Image introuvable: {image_path}")
+                        # Essayer de trouver l'image avec la fonction find_image_in_directory
+                        image_name_without_ext = os.path.splitext(image_name)[0]
+                        found_path = self.find_image_in_directory(self.filenames, image_name_without_ext)
+                        if found_path:
+                            print(f"Image trouvée à: {found_path}")
+                            features.append((found_path, feature))
+                        else:
+                            print(f"Image introuvable même après recherche récursive")
                     
                 except Exception as e:
                     print(f"Erreur lors du chargement de {file_name}: {str(e)}")
+                    import traceback
+                    traceback.print_exc()
             
             # Mettre à jour la barre de progression
             progress_value = min(100, int(100 * (i + len(batch_files)) / total_files))
@@ -335,18 +315,34 @@ class SearchPage(QtWidgets.QWidget):
         
         print(f"Chargé {len(features)} descripteurs {folder_name}")
         return features
+
+    def find_image_in_directory(self, base_dir, image_name):
+        """
+        Recherche récursivement une image dans un dossier et ses sous-dossiers.
+        
+        Args:
+            base_dir: Dossier de base pour la recherche
+            image_name: Nom de l'image à rechercher (sans extension)
+            
+        Returns:
+            Chemin complet de l'image si trouvée, None sinon
+        """
+        for root, dirs, files in os.walk(base_dir):
+            for file in files:
+                if file.lower().endswith(('.jpg', '.jpeg', '.png')):
+                    file_name_without_ext = os.path.splitext(file)[0]
+                    if file_name_without_ext == image_name:
+                        return os.path.join(root, file)
+        return None
     
     def loadDescriptors(self):
         """Charge les descripteurs sélectionnés"""
         # Vérifier qu'au moins un descripteur est sélectionné
         if not any([
-            self.checkBoxBGR.isChecked(),
-            self.checkBoxHSV.isChecked(),
-            self.checkBoxSIFT.isChecked(),
-            self.checkBoxORB.isChecked(),
-            self.checkBoxGLCM.isChecked(),
+            self.checkBoxColor.isChecked(),
+            self.checkBoxHOG.isChecked(),
             self.checkBoxLBP.isChecked(),
-            self.checkBoxHOG.isChecked()
+            self.checkBoxORB.isChecked()
         ]):
             showDialog()
             return
@@ -357,50 +353,47 @@ class SearchPage(QtWidgets.QWidget):
         
         # Charger les descripteurs sélectionnés
         total_descriptors = sum([
-            self.checkBoxBGR.isChecked(),
-            self.checkBoxHSV.isChecked(),
-            self.checkBoxSIFT.isChecked(),
-            self.checkBoxORB.isChecked(),
-            self.checkBoxGLCM.isChecked(),
+            self.checkBoxColor.isChecked(),
+            self.checkBoxHOG.isChecked(),
             self.checkBoxLBP.isChecked(),
-            self.checkBoxHOG.isChecked()
+            self.checkBoxORB.isChecked()
         ])
         
         progress = 0
         loaded_descriptors = []
         
-        # Charger BGR
-        if self.checkBoxBGR.isChecked():
+        # Charger histogramme de couleurs
+        if self.checkBoxColor.isChecked():
             self.progressBar.setValue(0)  # Réinitialiser pour chaque type de descripteur
             QtWidgets.QApplication.processEvents()
-            features_bgr = self.loadFeatureType('BGR', 1)
-            if features_bgr:  # Vérifier si des descripteurs ont été chargés
-                self.features['BGR'] = features_bgr
-                loaded_descriptors.append('BGR')
+            features_color = self.loadFeatureType('Histogramme de couleurs', 1)
+            if features_color:  # Vérifier si des descripteurs ont été chargés
+                self.features['Histogramme de couleurs'] = features_color
+                loaded_descriptors.append('Histogramme de couleurs')
             progress += 1
             self.progressBar.setValue(int(100 * progress / total_descriptors))
             QtWidgets.QApplication.processEvents()
         
-        # Charger HSV
-        if self.checkBoxHSV.isChecked():
+        # Charger HOG
+        if self.checkBoxHOG.isChecked():
             self.progressBar.setValue(0)  # Réinitialiser pour chaque type de descripteur
             QtWidgets.QApplication.processEvents()
-            features_hsv = self.loadFeatureType('HSV', 2)
-            if features_hsv:  # Vérifier si des descripteurs ont été chargés
-                self.features['HSV'] = features_hsv
-                loaded_descriptors.append('HSV')
+            features_hog = self.loadFeatureType('HOG', 2)
+            if features_hog:  # Vérifier si des descripteurs ont été chargés
+                self.features['HOG'] = features_hog
+                loaded_descriptors.append('HOG')
             progress += 1
             self.progressBar.setValue(int(100 * progress / total_descriptors))
             QtWidgets.QApplication.processEvents()
         
-        # Charger SIFT
-        if self.checkBoxSIFT.isChecked():
+        # Charger LBP
+        if self.checkBoxLBP.isChecked():
             self.progressBar.setValue(0)  # Réinitialiser pour chaque type de descripteur
             QtWidgets.QApplication.processEvents()
-            features_sift = self.loadFeatureType('SIFT', 3)
-            if features_sift:  # Vérifier si des descripteurs ont été chargés
-                self.features['SIFT'] = features_sift
-                loaded_descriptors.append('SIFT')
+            features_lbp = self.loadFeatureType('LBP', 3)
+            if features_lbp:  # Vérifier si des descripteurs ont été chargés
+                self.features['LBP'] = features_lbp
+                loaded_descriptors.append('LBP')
             progress += 1
             self.progressBar.setValue(int(100 * progress / total_descriptors))
             QtWidgets.QApplication.processEvents()
@@ -413,42 +406,6 @@ class SearchPage(QtWidgets.QWidget):
             if features_orb:  # Vérifier si des descripteurs ont été chargés
                 self.features['ORB'] = features_orb
                 loaded_descriptors.append('ORB')
-            progress += 1
-            self.progressBar.setValue(int(100 * progress / total_descriptors))
-            QtWidgets.QApplication.processEvents()
-        
-        # Charger GLCM
-        if self.checkBoxGLCM.isChecked():
-            self.progressBar.setValue(0)  # Réinitialiser pour chaque type de descripteur
-            QtWidgets.QApplication.processEvents()
-            features_glcm = self.loadFeatureType('GLCM', 5)
-            if features_glcm:  # Vérifier si des descripteurs ont été chargés
-                self.features['GLCM'] = features_glcm
-                loaded_descriptors.append('GLCM')
-            progress += 1
-            self.progressBar.setValue(int(100 * progress / total_descriptors))
-            QtWidgets.QApplication.processEvents()
-        
-        # Charger LBP
-        if self.checkBoxLBP.isChecked():
-            self.progressBar.setValue(0)  # Réinitialiser pour chaque type de descripteur
-            QtWidgets.QApplication.processEvents()
-            features_lbp = self.loadFeatureType('LBP', 6)
-            if features_lbp:  # Vérifier si des descripteurs ont été chargés
-                self.features['LBP'] = features_lbp
-                loaded_descriptors.append('LBP')
-            progress += 1
-            self.progressBar.setValue(int(100 * progress / total_descriptors))
-            QtWidgets.QApplication.processEvents()
-        
-        # Charger HOG
-        if self.checkBoxHOG.isChecked():
-            self.progressBar.setValue(0)  # Réinitialiser pour chaque type de descripteur
-            QtWidgets.QApplication.processEvents()
-            features_hog = self.loadFeatureType('HOG', 7)
-            if features_hog:  # Vérifier si des descripteurs ont été chargés
-                self.features['HOG'] = features_hog
-                loaded_descriptors.append('HOG')
             progress += 1
             self.progressBar.setValue(int(100 * progress / total_descriptors))
             QtWidgets.QApplication.processEvents()
@@ -507,6 +464,10 @@ class SearchPage(QtWidgets.QWidget):
         # Réinitialiser la barre de progression
         self.progressBar.setValue(0)
         
+        # Réinitialiser les métriques au début de la recherche (pas à la fin)
+        self.metrics_data = {}
+        self.metricsButton.setEnabled(False)
+        
         # Afficher les descripteurs chargés pour le débogage
         print(f"Descripteurs chargés: {list(self.features.keys())}")
         for desc_type, features in self.features.items():
@@ -542,20 +503,14 @@ class SearchPage(QtWidgets.QWidget):
             QtWidgets.QApplication.processEvents()  # Forcer la mise à jour de l'interface
             
             # Déterminer l'algo_choice en fonction du type de descripteur
-            if desc_type == 'BGR':
+            if desc_type == 'Histogramme de couleurs':
                 algo_choice = 1
-            elif desc_type == 'HSV':
+            elif desc_type == 'HOG':
                 algo_choice = 2
-            elif desc_type == 'SIFT':
+            elif desc_type == 'LBP':
                 algo_choice = 3
             elif desc_type == 'ORB':
                 algo_choice = 4
-            elif desc_type == 'GLCM':
-                algo_choice = 5
-            elif desc_type == 'LBP':
-                algo_choice = 6
-            elif desc_type == 'HOG':
-                algo_choice = 7
             else:
                 processed_descriptors += 1
                 continue
@@ -572,9 +527,6 @@ class SearchPage(QtWidgets.QWidget):
                 if desc_type == 'ORB' and distance_name != "Brute force":
                     current_distance = "Brute force"
                     print(f"Distance adaptée pour ORB: {current_distance}")
-                elif desc_type == 'SIFT' and distance_name not in ["Euclidienne", "Flann"]:
-                    current_distance = "Flann"
-                    print(f"Distance adaptée pour SIFT: {current_distance}")
                 
                 # Rechercher les voisins
                 neighbors = getkVoisins(features, req_features, k, current_distance)
@@ -595,7 +547,7 @@ class SearchPage(QtWidgets.QWidget):
             QtWidgets.QApplication.processEvents()  # Forcer la mise à jour de l'interface
         
         # Trier les résultats combinés par distance
-        if distance_name in ["Correlation", "Intersection"]:
+        if distance_name in ["Cosinus", "Euclidienne", "Manhattan"]:
             combined_results.sort(key=lambda x: -x[1])  # Tri décroissant pour les mesures de similarité
         else:
             combined_results.sort(key=lambda x: x[1])  # Tri croissant pour les mesures de distance
@@ -677,149 +629,182 @@ class SearchPage(QtWidgets.QWidget):
                 
             except Exception as e:
                 print(f"Erreur lors de l'affichage de l'image {path}: {str(e)}")
+        
+        # Calculer et stocker les métriques
+        self.calculateMetrics()
+        
+        # Activer le bouton des métriques
+        self.metricsButton.setEnabled(True)
     
     def calculateMetrics(self):
-        """Calcule et affiche les métriques d'évaluation"""
+        """Calcule les métriques d'évaluation"""
         if not self.results:
-            # Réinitialiser les métriques si aucun résultat
-            for i in range(5):
-                self.metricsTable.setItem(i, 1, QtWidgets.QTableWidgetItem("N/A"))
+            self.metrics_data = {}
             return
         
-        # Déterminer la classe de l'image requête
-        req_path = self.image_path
+        # Extraire la classe de l'image requête
+        req_class = None
+        if self.image_path:
+            parts = self.image_path.split(os.sep)
+            if len(parts) >= 3:
+                # Format attendu: .../animal/race/image.jpg
+                animal_idx = max(0, len(parts) - 3)
+                breed_idx = max(0, len(parts) - 2)
+                req_class = f"{parts[animal_idx]}/{parts[breed_idx]}"
         
-        # Extraire l'animal et la race à partir du chemin
-        path_parts = req_path.split(os.sep)
+        if not req_class:
+            print("Impossible de déterminer la classe de l'image requête")
+            self.metrics_data = {}
+            return
         
-        # Trouver les indices de l'animal et de la race dans le chemin
-        # Format attendu: .../MIR_DATASETS_B/animal/race/image.jpg
-        animal_index = -1
-        breed_index = -1
+        # Calculer les métriques
+        relevant_count = self.class_counts.get(req_class, 0)
+        if relevant_count == 0:
+            print(f"Aucune image trouvée pour la classe {req_class}")
+            self.metrics_data = {}
+            return
         
-        for i, part in enumerate(path_parts):
-            if part == "MIR_DATASETS_B" and i+2 < len(path_parts):
-                animal_index = i+1
-                breed_index = i+2
-                break
-        
-        if animal_index >= 0 and breed_index >= 0:
-            req_animal = path_parts[animal_index]
-            req_breed = path_parts[breed_index]
-            req_class = f"{req_animal}/{req_breed}"
-            print(f"Classe de l'image requête identifiée: {req_class}")
-        else:
-            # Si l'image n'est pas dans la structure attendue, essayer d'extraire du nom de fichier
-            file_name = os.path.basename(req_path)
-            parts = os.path.splitext(file_name)[0].split('_')
-            
-            if len(parts) >= 2:
-                req_animal = parts[0]
-                req_breed = parts[1]
-                req_class = f"{req_animal}/{req_breed}"
-                print(f"Classe extraite du nom de fichier: {req_class}")
-            else:
-                QtWidgets.QMessageBox.warning(self, "Attention", 
-                                             "Impossible de déterminer la classe de l'image requête.")
-                return
-        
-        # Nombre total d'images pertinentes dans la base
-        total_relevant = self.class_counts.get(req_class, 0)
-        if total_relevant == 0:
-            # Essayer de compter manuellement
-            total_relevant = 0
-            class_path = os.path.join(self.filenames, req_animal, req_breed)
-            if os.path.exists(class_path):
-                for file in os.listdir(class_path):
-                    if file.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp')):
-                        total_relevant += 1
-            
-            if total_relevant == 0:
-                QtWidgets.QMessageBox.warning(self, "Attention", 
-                                             f"Aucune image de la classe {req_class} trouvée dans la base.")
-                return
-        
-        print(f"Classe de l'image requête: {req_class}")
-        print(f"Nombre total d'images pertinentes: {total_relevant}")
-        
-        # Calculer la pertinence de chaque résultat
-        relevance = []
-        for path, _, _ in self.results:
-            try:
-                # Extraire l'animal et la race à partir du chemin
-                path_parts = path.split(os.sep)
-                
-                # Chercher les indices de l'animal et de la race
-                animal_index = -1
-                breed_index = -1
-                
-                for i, part in enumerate(path_parts):
-                    if part == "MIR_DATASETS_B" and i+2 < len(path_parts):
-                        animal_index = i+1
-                        breed_index = i+2
-                        break
-                
-                if animal_index >= 0 and breed_index >= 0:
-                    img_animal = path_parts[animal_index]
-                    img_breed = path_parts[breed_index]
-                    img_class = f"{img_animal}/{img_breed}"
-                    is_relevant = 1 if img_class == req_class else 0
-                    relevance.append(is_relevant)
-                    print(f"Image {path}: classe={img_class}, pertinence={is_relevant}")
-                else:
-                    relevance.append(0)
-                    print(f"Image {path}: impossible de déterminer la classe")
-            except Exception as e:
-                relevance.append(0)
-                print(f"Erreur lors de l'analyse du chemin {path}: {str(e)}")
-        
-        # Calculer le rappel et la précision à chaque position
-        recalls = []
+        # Initialiser les listes pour les calculs
+        relevants = []
         precisions = []
-        relevant_count = 0
+        recalls = []
         
-        for i, rel in enumerate(relevance):
-            if rel == 1:
-                relevant_count += 1
+        # Calculer précision et rappel à chaque rang
+        retrieved_relevant = 0
+        for i, (path, _, _) in enumerate(self.results):
+            parts = path.split(os.sep)
+            if len(parts) >= 3:
+                # Format attendu: .../animal/race/image.jpg
+                animal_idx = max(0, len(parts) - 3)
+                breed_idx = max(0, len(parts) - 2)
+                result_class = f"{parts[animal_idx]}/{parts[breed_idx]}"
+                
+                # Vérifier si le résultat est pertinent (même classe)
+                is_relevant = (result_class == req_class)
+                relevants.append(is_relevant)
+                
+                if is_relevant:
+                    retrieved_relevant += 1
+                
+                # Calculer précision et rappel à ce rang
+                precision = retrieved_relevant / (i + 1)
+                recall = retrieved_relevant / relevant_count
+                
+                precisions.append(precision)
+                recalls.append(recall)
+        
+        # Calculer la précision moyenne (AP)
+        ap = 0.0
+        if recalls:
+            # Utiliser la méthode de l'interpolation
+            for i in range(11):  # 11 points: 0.0, 0.1, ..., 1.0
+                r = i / 10
+                # Trouver toutes les précisions à des rappels >= r
+                p_at_r = [precisions[j] for j in range(len(recalls)) if recalls[j] >= r]
+                if p_at_r:
+                    ap += max(p_at_r) / 11
+        
+        # Calculer R-Precision
+        r_precision = 0.0
+        if relevant_count <= len(relevants):
+            r_precision = sum(relevants[:relevant_count]) / relevant_count
+        
+        # Stocker les métriques dans le dictionnaire
+        self.metrics_data = {
+            "Rappel": recalls[-1] if recalls else 0.0,
+            "Précision": precisions[-1] if precisions else 0.0,
+            "AP": ap,
+            "MAP": ap,  # Pour une seule requête, MAP = AP
+            "R-Precision": r_precision,
+            "precision_recall_curve": {
+                "recall": recalls,
+                "precision": precisions
+            }
+        }
+        
+        print(f"Métriques calculées: Rappel={self.metrics_data['Rappel']:.4f}, "
+              f"Précision={self.metrics_data['Précision']:.4f}, AP={self.metrics_data['AP']:.4f}, "
+              f"R-Precision={self.metrics_data['R-Precision']:.4f}")
+    
+    def showMetricsWindow(self):
+        """Affiche la fenêtre des métriques d'évaluation"""
+        metrics_window = MetricsWindow(self, self.metrics_data)
+        metrics_window.exec_()
+
+# Ajouter cette nouvelle classe pour la fenêtre des métriques
+class MetricsWindow(QtWidgets.QDialog):
+    def __init__(self, parent=None, metrics_data=None):
+        super(MetricsWindow, self).__init__(parent)
+        self.setWindowTitle("Métriques d'Évaluation")
+        self.resize(600, 500)
+        self.metrics_data = metrics_data or {}
+        self.setupUi()
+        
+    def setupUi(self):
+        # Layout principal
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
+        
+        # Tableau des métriques
+        self.metricsTable = QtWidgets.QTableWidget(5, 2)
+        self.metricsTable.setHorizontalHeaderLabels(["Métrique", "Valeur"])
+        self.metricsTable.setVerticalHeaderLabels(["", "", "", "", ""])
+        
+        # Augmenter la hauteur des lignes pour voir toutes les données
+        self.metricsTable.verticalHeader().setDefaultSectionSize(30)
+        
+        # Définir une largeur minimale pour la colonne des valeurs
+        self.metricsTable.setColumnWidth(1, 150)
+        
+        # Définir une hauteur minimale pour le tableau
+        self.metricsTable.setMinimumHeight(180)
+        
+        # Remplir le tableau avec les noms des métriques
+        metrics = ["Rappel", "Précision", "AP", "MAP", "R-Precision"]
+        for i, metric in enumerate(metrics):
+            item = QtWidgets.QTableWidgetItem(metric)
+            self.metricsTable.setItem(i, 0, item)
             
-            recall = relevant_count / total_relevant if total_relevant > 0 else 0
-            precision = relevant_count / (i + 1) if i + 1 > 0 else 0
+            # Initialiser les valeurs à N/A ou aux valeurs fournies
+            value = self.metrics_data.get(metric, "N/A")
+            value_item = QtWidgets.QTableWidgetItem(str(value))
+            self.metricsTable.setItem(i, 1, value_item)
+        
+        # Étirer les colonnes pour remplir l'espace disponible
+        self.metricsTable.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.mainLayout.addWidget(self.metricsTable)
+        
+        # Courbe Rappel/Précision
+        self.rpFigure = Figure(figsize=(6, 5), dpi=100)
+        self.rpCanvas = FigureCanvas(self.rpFigure)
+        self.mainLayout.addWidget(self.rpCanvas)
+        
+        # Si des données de courbe sont disponibles, les afficher
+        if 'precision_recall_curve' in self.metrics_data:
+            self.plot_precision_recall_curve(self.metrics_data['precision_recall_curve'])
+        
+        # Bouton de fermeture
+        self.closeButton = QtWidgets.QPushButton("Fermer")
+        self.closeButton.clicked.connect(self.accept)
+        self.mainLayout.addWidget(self.closeButton)
+    
+    def plot_precision_recall_curve(self, data):
+        """Affiche la courbe précision-rappel"""
+        try:
+            ax = self.rpFigure.add_subplot(111)
+            ax.clear()
             
-            recalls.append(recall)
-            precisions.append(precision)
-        
-        # Calculer l'Average Precision (AP)
-        ap = 0
-        if sum(relevance) > 0:  # S'assurer qu'il y a au moins un document pertinent
-            # Méthode 1: AP = somme(P(k) * rel(k)) / nombre de documents pertinents
-            for i, rel in enumerate(relevance):
-                if rel == 1:
-                    ap += precisions[i]
-            ap /= total_relevant
-        
-        # Calculer la R-Precision
-        r_precision = 0
-        if total_relevant <= len(relevance):
-            r_precision = sum(relevance[:total_relevant]) / total_relevant if total_relevant > 0 else 0
-        
-        # Afficher les métriques dans le tableau
-        self.metricsTable.setItem(0, 1, QtWidgets.QTableWidgetItem(f"{recalls[-1]:.4f}"))
-        self.metricsTable.setItem(1, 1, QtWidgets.QTableWidgetItem(f"{precisions[-1]:.4f}"))
-        self.metricsTable.setItem(2, 1, QtWidgets.QTableWidgetItem(f"{ap:.4f}"))
-        self.metricsTable.setItem(3, 1, QtWidgets.QTableWidgetItem("N/A"))  # MAP nécessite plusieurs requêtes
-        self.metricsTable.setItem(4, 1, QtWidgets.QTableWidgetItem(f"{r_precision:.4f}"))
-        
-        print(f"Rappel final: {recalls[-1]:.4f}")
-        print(f"Précision finale: {precisions[-1]:.4f}")
-        print(f"AP: {ap:.4f}")
-        print(f"R-Precision: {r_precision:.4f}")
-        
-        # Tracer la courbe Rappel/Précision
-        self.rpFigure.clear()
-        ax = self.rpFigure.add_subplot(111)
-        ax.plot(recalls, precisions, 'b-o')
-        ax.set_xlabel('Rappel')
-        ax.set_ylabel('Précision')
-        ax.set_title('Courbe Rappel/Précision')
-        ax.grid(True)
-        self.rpCanvas.draw()
+            # Extraire les données
+            recall = data.get('recall', [])
+            precision = data.get('precision', [])
+            
+            if recall and precision and len(recall) == len(precision):
+                ax.plot(recall, precision, 'b-', linewidth=2)
+                ax.set_xlabel('Rappel')
+                ax.set_ylabel('Précision')
+                ax.set_title('Courbe Précision-Rappel')
+                ax.grid(True)
+                ax.set_xlim([0.0, 1.0])
+                ax.set_ylim([0.0, 1.05])
+                self.rpCanvas.draw()
+        except Exception as e:
+            print(f"Erreur lors de l'affichage de la courbe: {str(e)}")

@@ -6,6 +6,9 @@ Page d'accueil de l'application
 from PyQt5 import QtCore, QtGui, QtWidgets
 from descriptors_page import DescriptorsPage
 from display_page import DisplayPage
+from text_search_page import TextSearchPage
+from deep_search_page import DeepSearchPage
+from search_page import SearchPage
 
 class HomePage(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -34,6 +37,15 @@ class HomePage(QtWidgets.QWidget):
         # Boutons
         self.btnLayout = QtWidgets.QVBoxLayout()
         
+        # Bouton pour l'affichage des images (une seule fois)
+        self.btnDisplay = QtWidgets.QPushButton("Affichage des Images")
+        self.btnDisplay.setMinimumHeight(60)
+        self.btnDisplay.setFont(font)
+        self.btnLayout.addWidget(self.btnDisplay)
+
+        # Espace entre les boutons
+        self.btnLayout.addSpacing(20)
+        
         # Bouton pour le calcul des descripteurs
         self.btnDescriptors = QtWidgets.QPushButton("Calcul des Descripteurs")
         self.btnDescriptors.setMinimumHeight(60)
@@ -46,7 +58,7 @@ class HomePage(QtWidgets.QWidget):
         self.btnLayout.addSpacing(20)
         
         # Bouton pour le moteur de recherche
-        self.btnSearch = QtWidgets.QPushButton("Moteur de Recherche")
+        self.btnSearch = QtWidgets.QPushButton("Moteur de Recherche avec descripteurs")
         self.btnSearch.setMinimumHeight(60)
         self.btnSearch.setFont(font)
         self.btnLayout.addWidget(self.btnSearch)
@@ -54,11 +66,20 @@ class HomePage(QtWidgets.QWidget):
         # Espace entre les boutons
         self.btnLayout.addSpacing(20)
         
-        # Bouton pour l'affichage des images
-        self.btnDisplay = QtWidgets.QPushButton("Affichage des Images")
-        self.btnDisplay.setMinimumHeight(60)
-        self.btnDisplay.setFont(font)
-        self.btnLayout.addWidget(self.btnDisplay)
+        # Bouton pour la recherche d'images par texte
+        self.btnTextSearch = QtWidgets.QPushButton("Recherche d'Images par Texte")
+        self.btnTextSearch.setMinimumHeight(60)
+        self.btnTextSearch.setFont(font)
+        self.btnLayout.addWidget(self.btnTextSearch)
+        
+        # Espace entre les boutons
+        self.btnLayout.addSpacing(20)
+        
+        # Bouton pour la recherche par deep learning
+        self.btnDeepSearch = QtWidgets.QPushButton("Moteur de Recherche par Deep Learning")
+        self.btnDeepSearch.setMinimumHeight(60)
+        self.btnDeepSearch.setFont(font)
+        self.btnLayout.addWidget(self.btnDeepSearch)
         
         # Ajouter les boutons au layout principal avec des marges
         self.mainLayout.addLayout(self.btnLayout)
@@ -67,7 +88,9 @@ class HomePage(QtWidgets.QWidget):
         # Connexion des signaux
         self.btnDescriptors.clicked.connect(self.openDescriptorsPage)
         self.btnSearch.clicked.connect(self.openSearchPage)
+        self.btnTextSearch.clicked.connect(self.openTextSearchPage)
         self.btnDisplay.clicked.connect(self.openDisplayPage)
+        self.btnDeepSearch.clicked.connect(self.openDeepSearchPage)
     
     def openDescriptorsPage(self):
         self.descriptorsPage = DescriptorsPage()
@@ -76,11 +99,16 @@ class HomePage(QtWidgets.QWidget):
         self.descriptorsPage.show()
     
     def openSearchPage(self):
-        from search_page import SearchPage
         self.searchPage = SearchPage()
         self.searchPage.backButton.clicked.connect(self.showHomePage)
         self.hide()
         self.searchPage.show()
+    
+    def openTextSearchPage(self):
+        self.textSearchPage = TextSearchPage()
+        self.textSearchPage.backButton.clicked.connect(self.showHomePage)
+        self.hide()
+        self.textSearchPage.show()
     
     def openDisplayPage(self):
         self.displayPage = DisplayPage()
@@ -88,7 +116,13 @@ class HomePage(QtWidgets.QWidget):
         self.hide()
         self.displayPage.show()
     
+    def openDeepSearchPage(self):
+        self.deepSearchPage = DeepSearchPage()
+        self.deepSearchPage.backButton.clicked.connect(self.showHomePage)
+        self.hide()
+        self.deepSearchPage.show()
+    
     def showHomePage(self):
         sender = self.sender()
         sender.parent().hide()
-        self.show() 
+        self.show()
