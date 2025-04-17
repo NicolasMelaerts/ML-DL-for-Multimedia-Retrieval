@@ -55,12 +55,6 @@ docker build -t my_project .
 docker run -it --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v "$(pwd)":/opt/TP -w /opt/TP my_project bash
 ```
 
-Puis, à l’intérieur du conteneur :
-
-```bash
-python3 main.py
-```
-
 ---
 
 ## 🔁 Lancement ultérieur
@@ -84,7 +78,7 @@ Puis dans le conteneur :
    ```
 
 2. **Entrez dans le dossier `DESKTOP_APP` :**
-    
+
 ```bash
 cd DESKTOP_APP
 ```
