@@ -11,10 +11,10 @@ from io import BytesIO
 app = Flask(__name__)
 
 # Configuration
-MODEL_PATH = "Transformer/sentence_transformer_model"
-CAPTIONS_FILE = "Transformer/captions.json"
-EMBEDDINGS_DIR = "Transformer/embeddings_output"
-CONTENT_DIR = "content"
+MODEL_PATH = "DESKTOP_APP/Transformer/sentence_transformer_model"
+CAPTIONS_FILE = "DESKTOP_APP/Transformer/captions.json"
+EMBEDDINGS_DIR = "DESKTOP_APP/Transformer/embeddings_output"
+DATASETS_DIR = "DESKTOP_APP/MIR_DATASETS_B"
 
 # Variables globales
 model = None
@@ -85,8 +85,16 @@ def index():
                                 
                                 # Construire le chemin de l'image
                                 image_filename = os.path.basename(relative_path)
-                                image_path = os.path.join(CONTENT_DIR, image_filename + '.jpg')
-                                image_path = image_path.replace(' ', '')
+                                
+                                # Rechercher l'image récursivement dans MIR_DATASETS_B
+                                image_path = None
+                                for img_root, img_dirs, img_files in os.walk(DATASETS_DIR):
+                                    for img_file in img_files:
+                                        if img_file.lower().endswith(('.jpg', '.jpeg', '.png')) and image_filename in img_file:
+                                            image_path = os.path.join(img_root, img_file)
+                                            break
+                                    if image_path:
+                                        break
                                 
                                 # Récupérer la description si disponible
                                 caption = ""
@@ -97,7 +105,7 @@ def index():
                                 
                                 # Convertir l'image en base64 pour l'affichage
                                 image_data = None
-                                if os.path.exists(image_path):
+                                if image_path and os.path.exists(image_path):
                                     with Image.open(image_path) as img:
                                         img = img.resize((200, 200), Image.LANCZOS)
                                         buffer = BytesIO()
@@ -106,7 +114,7 @@ def index():
                                 
                                 # Ajouter aux résultats
                                 results.append({
-                                    'image_path': image_path,
+                                    'image_path': image_path if image_path else "Image non trouvée",
                                     'image_data': image_data,
                                     'caption': caption,
                                     'similarity': sim,
