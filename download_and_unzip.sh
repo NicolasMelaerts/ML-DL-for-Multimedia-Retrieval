@@ -3,6 +3,7 @@
 # ID du fichier Google Drive
 FILE_ID="1APY6Ze-PG60hDD81EhuW71s_WtqA_qkg"
 FILENAME="Projet_moteur_recherche.zip"
+DEST_DIR="DESKTOP_APP"
 
 # Télécharger avec gdown
 gdown "$FILE_ID" -O "$FILENAME"
@@ -18,10 +19,12 @@ if [ -f "$FILENAME" ]; then
     # Extraire dans le dossier temporaire
     unzip -o "$FILENAME" -d "$TEMP_DIR"
     
-    # Déplacer le contenu de Projet_moteur_recherche/ vers le dossier courant
+    # Déplacer le contenu dans le dossier DEST_DIR
     INNER_DIR="$TEMP_DIR/Projet_moteur_recherche"
     if [ -d "$INNER_DIR" ]; then
-        mv "$INNER_DIR"/* .
+        mkdir -p "$DEST_DIR"
+        mv "$INNER_DIR"/* "$DEST_DIR"
+        echo "Contenu déplacé dans le dossier $DEST_DIR/"
     else
         echo "Erreur : le dossier Projet_moteur_recherche n'a pas été trouvé dans l'archive."
     fi
@@ -29,7 +32,7 @@ if [ -f "$FILENAME" ]; then
     # Supprimer le dossier temporaire et le zip
     rm -rf "$TEMP_DIR" "$FILENAME"
     
-    echo "Décompression terminée. Contenu extrait dans le dossier courant."
+    echo "Décompression terminée."
 else
     echo "Échec du téléchargement."
 fi
