@@ -71,7 +71,7 @@ Puis dans le conteneur :
 
 1. **Télécharger les fichiers nécessaires :**
 
-   À l'intérieur du conteneur, exécutez le script `download_and_unzip.sh` pour télécharger la base de données, le dossier de transformation pour le moteur de recherche par texte, et les features pour les modèles Deep Learning. Ce script extraira ces fichiers dans le dossier `DESKTOP_APP`.
+   À l'intérieur du conteneur, exécutez le script `download_and_unzip.sh` pour télécharger la base de données d'images, le dossier de transformer déjà entrainé pour le moteur de recherche par texte, et les features déjà extraites avec google colabpour les modèles Deep Learning. Ce script extraira ces fichiers dans le dossier `DESKTOP_APP`.
    
    ```bash
    ./download_and_unzip.sh
