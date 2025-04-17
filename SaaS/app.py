@@ -11,10 +11,10 @@ from io import BytesIO
 app = Flask(__name__)
 
 # Configuration
-MODEL_PATH = "DESKTOP_APP/Transformer/sentence_transformer_model"
-CAPTIONS_FILE = "DESKTOP_APP/Transformer/captions.json"
-EMBEDDINGS_DIR = "DESKTOP_APP/Transformer/embeddings_output"
-DATASETS_DIR = "DESKTOP_APP/MIR_DATASETS_B"
+MODEL_PATH = "../DESKTOP_APP/Transformer/sentence_transformer_model"
+CAPTIONS_FILE = "../DESKTOP_APP/Transformer/captions.json"
+EMBEDDINGS_DIR = "../DESKTOP_APP/Transformer/embeddings_output"
+DATASETS_DIR = "../DESKTOP_APP/MIR_DATASETS_B"
 
 # Variables globales
 model = None
@@ -245,4 +245,4 @@ if __name__ == '__main__':
 </html>''')
     
     # Lancer l'application
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True)

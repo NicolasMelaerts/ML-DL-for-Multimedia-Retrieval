@@ -11,7 +11,7 @@ WORKDIR /opt/TP
 COPY download_and_unzip.sh .
 
 # Installer les dépendances Python
-RUN pip install --no-cache-dir sentence-transformers
+RUN pip install --no-cache-dir sentence-transformers flask
 
 
 WORKDIR /opt/TP

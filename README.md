@@ -14,7 +14,17 @@ Ce projet utilise Docker pour encapsuler une application PyQt. Voici les étapes
 
 ## 🚀 Premier lancement
 
-### 1. Démarrer XQuartz
+### 1. Définir la variable d’environnement DISPLAY
+
+```bash
+export DISPLAY=192.168.1.40:0.0
+```
+
+> Remplacer `192.168.1.40` par l’adresse IP de votre machine (trouvable via `ifconfig`, dans la section `en0`).
+
+---
+
+### 2. Démarrer XQuartz
 
 - Lancer l’application **XQuartz**
 - Aller dans les préférences : `XQuartz > Preferences`
@@ -27,17 +37,6 @@ Ce projet utilise Docker pour encapsuler une application PyQt. Voici les étapes
 xhost +
 ```
 
----
-
-### 2. Définir la variable d’environnement DISPLAY
-
-```bash
-export DISPLAY=192.168.1.40:0.0
-```
-
-> Remplacer `192.168.1.40` par l’adresse IP de votre machine (trouvable via `ifconfig`, dans la section `en0`).
-
----
 
 ### 3. Construire l’image Docker
 
@@ -87,6 +86,22 @@ cd DESKTOP_APP
 
 ```bash
 python3 main.py
+```
+
+---
+
+## Lancement du SaaS
+
+1. **Ouverture du docker avec le port 8080 :**
+
+```bash
+docker run -it --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v "$(pwd)":/opt/TP -w /opt/TP -p 8080:8080 my_project bash
+```
+
+2. **Lancement du SaaS :**
+
+```bash
+python3 SaaS/app.py
 ```
 
 ---
