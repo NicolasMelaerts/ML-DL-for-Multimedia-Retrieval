@@ -18,6 +18,12 @@ WORKDIR /opt/TP
 
 COPY . .
 
+# Exposer le port Flask
+EXPOSE 5000
+
+# Lancer app.py (application Flask)
+CMD ["python3", "app.py"]
+
 # Définir le fichier principal à lancer
-CMD ["python3", "main.py"]
+#CMD ["python3", "main.py"]
 
