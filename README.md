@@ -103,14 +103,24 @@ docker run -it --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v "$(p
 Construire l'image Docker :
 
 ```bash
-docker build -t flaskapp .
+docker build -t flaskapp_V1 .
 ```
 
 Executer le conteneur :
 
 ```bash
-docker run -p 5000:5000 --name flaskapp_V1flaskapp
+docker run -p 5000:5000 --name flaskapp_V1 flaskapp
 ```
+
+En montant un volume pour le dossier `DESKTOP_APP` :
+
+```bash
+docker run -d -p 5000:5000 \
+  --name flaskapp \
+  -v $(pwd)/DESKTOP_APP:/opt/DESKTOP_APP \
+  flaskapp_V1
+```
+
 
 Accéder à l'application :
 
