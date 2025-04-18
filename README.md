@@ -100,8 +100,22 @@ docker run -it --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v "$(p
 
 2. **Lancement du SaaS :**
 
+Construire l'image Docker :
+
 ```bash
-python3 SaaS/app.py
+docker build -t flaskapp .
+```
+
+Executer le conteneur :
+
+```bash
+docker run -p 5000:5000 --name flaskapp_V1flaskapp
+```
+
+Accéder à l'application :
+
+```bash
+http://163.172.234.110:5000
 ```
 
 ---
@@ -119,3 +133,5 @@ Pour nettoyer les ressources inutilisées :
 ```bash
 docker system prune
 ```
+
+
