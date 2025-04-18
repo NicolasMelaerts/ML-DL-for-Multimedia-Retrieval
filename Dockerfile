@@ -4,6 +4,9 @@ FROM coolsa/pyqt-designer:x64
 # Installer gdown (pour download depuis Google Drive, si besoin)
 RUN pip install --no-cache-dir gdown
 
+COPY download_and_unzip.sh .
+RUN chmod +x download_and_unzip.sh && ./download_and_unzip.sh
+
 # Définir le dossier de travail
 WORKDIR /opt/TP
 
