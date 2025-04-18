@@ -11,5 +11,3 @@ home_bp = Blueprint('home', __name__)
 def index():
     """Affiche la page d'accueil avec les différentes options"""
     return render_template('home.html', title="Système de Recherche d'Images")
-
-# Vous pouvez ajouter d'autres routes liées à la page d'accueil ici si nécessaire
