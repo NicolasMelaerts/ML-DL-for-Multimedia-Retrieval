@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir sentence-transformers flask
 
 WORKDIR /opt/TP
 
-COPY app.py /opt/TP/app.py
+COPY SaaS/app.py /opt/TP/app.py
 #COPY . .
 
 # Exposer le port Flask
