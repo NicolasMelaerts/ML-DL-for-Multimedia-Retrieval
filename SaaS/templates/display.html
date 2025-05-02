@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .image-frame {
+            border: 1px solid #ccc;
+            min-width: 600px;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            margin-bottom: 20px;
+        }
+        .image-frame img {
+            max-width: 100%;
+            max-height: 400px;
+        }
+        .nav-btn {
+            min-width: 150px;
+        }
+        .combo-box {
+            min-width: 400px;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-4">
+    <h1 class="mb-4 text-center">{{ title }}</h1>
+    
+    {% if error %}
+    <div class="alert alert-warning">{{ error }}</div>
+    {% endif %}
+    
+    {% if images %}
+    <form method="post" id="imageForm">
+        <div class="mb-3 text-center">
+            <button type="submit" name="action" value="prev" class="btn btn-primary nav-btn" {% if current_index == 0 %}disabled{% endif %}>
+                ◀ Précédente
+            </button>
+            <span class="mx-3 font-weight-bold">{{ current_index + 1 }} / {{ total }}</span>
+            <button type="submit" name="action" value="next" class="btn btn-primary nav-btn" {% if current_index + 1 == total %}disabled{% endif %}>
+                Suivante ▶
+            </button>
+        </div>
+        <div class="mb-3 d-flex justify-content-center align-items-center">
+            <label for="image_select" class="mr-2">Sélectionner une image :</label>
+            <select name="image_select" id="image_select" class="form-control combo-box">
+                {% for i in range(images|length) %}
+                    <option value="{{ i }}" {% if i == current_index %}selected{% endif %}>
+                        {{ images[i] }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button type="submit" name="action" value="select" class="btn btn-primary ml-2">Afficher</button>
+            <input type="hidden" name="current_index" value="{{ current_index }}">
+        </div>
+        <div class="image-frame mx-auto">
+            {% if image_data %}
+                <img src="data:image/jpeg;base64,{{ image_data }}" alt="Image">
+            {% else %}
+                <span>Aucune image chargée</span>
+            {% endif %}
+        </div>
+    </form>
+    {% else %}
+    <div class="alert alert-info">Aucune image disponible.</div>
+    {% endif %}
+    
+    <div class="text-center mt-4">
+        <a href="{{ url_for('home') }}" class="btn btn-secondary">Retour à l'accueil</a>
+    </div>
+</div>
+</body>
+</html>

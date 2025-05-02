@@ -92,18 +92,24 @@ python3 main.py
 
 ## Lancement du SaaS
 
-1. **Ouverture du docker avec le port 8080 :**
+1. **Ouverture du docker avec le port 8080 en local:**
 
 ```bash
-docker run -it --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v "$(pwd)":/opt/TP -w /opt/TP -p 8080:8080 my_project bash
+docker run -d --name flask_app -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v "$(pwd)":/opt/TP -w /opt/TP -p 8080:8080 my_project python3 SaaS/app.py
 ```
 
-2. **Lancement du SaaS :**
+```bash
+docker restart flask_app 
+```
+
+2. **Lancement du SaaS sur serveur:**
+
+#TODO 
 
 Construire l'image Docker :
 
 ```bash
-docker build -t flaskapp_V1 .
+docker build -t flaskapp_v1 .
 ```
 
 Executer le conteneur :
@@ -115,11 +121,15 @@ docker run -p 5000:5000 --name flaskapp_V1 flaskapp
 En montant un volume pour le dossier `DESKTOP_APP` :
 
 ```bash
-docker run -d -p 5000:5000 \
-  --name flaskapp \
-  -v $(pwd)/DESKTOP_APP:/opt/DESKTOP_APP \
-  flaskapp_V1
+docker run -d -p 5000:5000 --name flaskapp -v $(pwd)/DESKTOP_APP:/opt/DESKTOP_APP flaskapp_v1
 ```
+
+En local : 
+
+```bash
+docker run -d -p 5050:5000 --name flaskapp -v "${PWD}/DESKTOP_APP:/opt/DESKTOP_APP" flaskapp_v1
+```
+docker run -d -p 5050:5000 --name flaskapp -v "${pwd}/SaaS:/opt/SaaS" flaskapp_v1
 
 
 Accéder à l'application :

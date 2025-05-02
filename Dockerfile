@@ -14,9 +14,10 @@ COPY download_and_unzip.sh .
 RUN pip install --no-cache-dir sentence-transformers flask
 
 
-WORKDIR /opt/TP
+WORKDIR /opt/TP/SaaS
 
-COPY SaaS/app.py /opt/TP/app.py
+COPY SaaS /opt/TP/SaaS
+
 #COPY . .
 
 # Exposer le port Flask
