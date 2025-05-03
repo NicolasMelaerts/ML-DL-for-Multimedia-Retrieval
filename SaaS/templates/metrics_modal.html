@@ -1,0 +1,43 @@
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Métriques de performance</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <tbody>
+                            <tr>
+                                <th>Précision</th>
+                                <td>{{ "%.4f"|format(metrics.precision) }}</td>
+                            </tr>
+                            <tr>
+                                <th>Rappel</th>
+                                <td>{{ "%.4f"|format(metrics.rappel) }}</td>
+                            </tr>
+                            <tr>
+                                <th>Précision moyenne (AP)</th>
+                                <td>{{ "%.4f"|format(metrics.ap) }}</td>
+                            </tr>
+                            <tr>
+                                <th>R-Precision</th>
+                                <td>{{ "%.4f"|format(metrics.r_precision) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Courbe Précision-Rappel</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="precisionRecallChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

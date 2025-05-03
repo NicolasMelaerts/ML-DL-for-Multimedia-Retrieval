@@ -12,6 +12,9 @@ from routes.deep_search import deep_search_bp
 
 app = Flask(__name__)
 
+# Définir une clé secrète pour l'application
+app.config['SECRET_KEY'] = 'une_cle_secrete_tres_difficile_a_deviner'
+
 # Enregistrement des blueprints
 app.register_blueprint(text_search_bp, url_prefix='/text_search')
 app.register_blueprint(descriptors_bp, url_prefix='/descriptors')

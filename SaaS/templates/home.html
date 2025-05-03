@@ -1,60 +1,81 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        body {
-            padding-top: 2rem;
-            background-color: #f8f9fa;
-        }
-        .title {
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-        .btn-container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        .btn-custom {
-            margin-bottom: 1.5rem;
-            padding: 1rem;
-            font-size: 1.2rem;
-            width: 100%;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1 class="title">{{ title }}</h1>
-        
-        <div class="btn-container">
-            <a href="{{ url_for('display_page') }}" class="btn btn-primary btn-custom">
-                Affichage des Images
-            </a>
-            
-            <a href="{{ url_for('descriptors_page') }}" class="btn btn-secondary btn-custom">
-                Calcul des Descripteurs
-            </a>
-            
-            <a href="{{ url_for('search_page') }}" class="btn btn-success btn-custom">
-                Moteur de Recherche avec descripteurs
-            </a>
-            
-            <a href="{{ url_for('text_search_page') }}" class="btn btn-info btn-custom">
-                Recherche d'Images par Texte
-            </a>
-            
-            <a href="{{ url_for('deep_search_page') }}" class="btn btn-warning btn-custom">
-                Moteur de Recherche par Deep Learning
-            </a>
-        </div>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="jumbotron">
+        <h1 class="display-4 text-center">{{ title }}</h1>
+        <p class="lead text-center">Plateforme avancée de recherche et d'analyse d'images</p>
+        <hr class="my-4">
+        <p class="text-center">Explorez notre base d'images, calculez des descripteurs et utilisez différentes méthodes de recherche.</p>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-</html> 
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card feature-card">
+                <div class="card-body text-center">
+                    <div class="feature-icon text-primary">
+                        <i class="fas fa-images"></i>
+                    </div>
+                    <h5 class="card-title">Affichage des Images</h5>
+                    <p class="card-text">Parcourez et visualisez les images disponibles dans la base de données.</p>
+                    <a href="{{ url_for('display_page') }}" class="btn btn-primary">Explorer</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card feature-card">
+                <div class="card-body text-center">
+                    <div class="feature-icon text-secondary">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <h5 class="card-title">Calcul des Descripteurs</h5>
+                    <p class="card-text">Calculez différents descripteurs pour indexer votre base d'images.</p>
+                    <a href="{{ url_for('descriptors_page') }}" class="btn btn-secondary">Configurer</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card feature-card">
+                <div class="card-body text-center">
+                    <div class="feature-icon text-success">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h5 class="card-title">Recherche par Descripteurs</h5>
+                    <p class="card-text">Recherchez des images similaires en utilisant les descripteurs calculés.</p>
+                    <a href="{{ url_for('search_page') }}" class="btn btn-success">Rechercher</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card feature-card">
+                <div class="card-body text-center">
+                    <div class="feature-icon text-info">
+                        <i class="fas fa-font"></i>
+                    </div>
+                    <h5 class="card-title">Recherche par Texte</h5>
+                    <p class="card-text">Trouvez des images en utilisant des descriptions textuelles.</p>
+                    <a href="{{ url_for('text_search_page') }}" class="btn btn-info">Essayer</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card feature-card">
+                <div class="card-body text-center">
+                    <div class="feature-icon text-warning">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h5 class="card-title">Recherche Deep Learning</h5>
+                    <p class="card-text">Utilisez des modèles de deep learning pour trouver des images similaires.</p>
+                    <a href="{{ url_for('deep_search_page') }}" class="btn btn-warning">Découvrir</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

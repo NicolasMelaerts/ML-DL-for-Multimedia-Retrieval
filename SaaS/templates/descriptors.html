@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4 text-center">{{ title }}</h1>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="log-container">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'info' else 'primary' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Statut de la base de données</h5>
+        </div>
+        <div class="card-body">
+            <p id="dbStatus" class="{% if descriptor_status.values()|sum > 0 %}text-success{% else %}text-danger{% endif %}">
+                {% if descriptor_status.values()|sum > 0 %}
+                    Base de données partiellement indexée ({{ descriptor_status.values()|sum }} descripteurs calculés)
+                {% else %}
+                    Aucun descripteur calculé
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    
+    <form method="post">
+        <div class="form-group">
+            <label for="dataset_dir">Dossier des images:</label>
+            <input type="text" class="form-control" id="dataset_dir" name="dataset_dir" value="DESKTOP_APP/MIR_DATASETS_B">
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Sélection des descripteurs</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="descriptor-checkbox">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="hist_color" name="hist_color">
+                                <label class="custom-control-label" for="hist_color">
+                                    Histogramme Couleur 
+                                    {% if descriptor_status.BGR %}
+                                        <span class="calculated">[Calculé]</span>
+                                    {% endif %}
+                                </label>
+                            </div>
+                            <div class="descriptor-info">{{ descriptors_info['Hist Couleur'] }}</div>
+                        </div>
+                        
+                        <div class="descriptor-checkbox">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="hist_hsv" name="hist_hsv">
+                                <label class="custom-control-label" for="hist_hsv">
+                                    Histogramme HSV
+                                    {% if descriptor_status.HSV %}
+                                        <span class="calculated">[Calculé]</span>
+                                    {% endif %}
+                                </label>
+                            </div>
+                            <div class="descriptor-info">{{ descriptors_info['Hist HSV'] }}</div>
+                        </div>
+                        
+                        <div class="descriptor-checkbox">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="sift" name="sift">
+                                <label class="custom-control-label" for="sift">
+                                    SIFT
+                                    {% if descriptor_status.SIFT %}
+                                        <span class="calculated">[Calculé]</span>
+                                    {% endif %}
+                                </label>
+                            </div>
+                            <div class="descriptor-info">{{ descriptors_info['SIFT'] }}</div>
+                        </div>
+                        
+                        <div class="descriptor-checkbox">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="orb" name="orb">
+                                <label class="custom-control-label" for="orb">
+                                    ORB
+                                    {% if descriptor_status.ORB %}
+                                        <span class="calculated">[Calculé]</span>
+                                    {% endif %}
+                                </label>
+                            </div>
+                            <div class="descriptor-info">{{ descriptors_info['ORB'] }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="descriptor-checkbox">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="glcm" name="glcm">
+                                <label class="custom-control-label" for="glcm">
+                                    GLCM
+                                    {% if descriptor_status.GLCM %}
+                                        <span class="calculated">[Calculé]</span>
+                                    {% endif %}
+                                </label>
+                            </div>
+                            <div class="descriptor-info">{{ descriptors_info['GLCM'] }}</div>
+                        </div>
+                        
+                        <div class="descriptor-checkbox">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="lbp" name="lbp">
+                                <label class="custom-control-label" for="lbp">
+                                    LBP
+                                    {% if descriptor_status.LBP %}
+                                        <span class="calculated">[Calculé]</span>
+                                    {% endif %}
+                                </label>
+                            </div>
+                            <div class="descriptor-info">{{ descriptors_info['LBP'] }}</div>
+                        </div>
+                        
+                        <div class="descriptor-checkbox">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="hog" name="hog">
+                                <label class="custom-control-label" for="hog">
+                                    HOG
+                                    {% if descriptor_status.HOG %}
+                                        <span class="calculated">[Calculé]</span>
+                                    {% endif %}
+                                </label>
+                            </div>
+                            <div class="descriptor-info">{{ descriptors_info['HOG'] }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="progress-container">
+            <h5>Progression du calcul</h5>
+            <div class="progress">
+                <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+            </div>
+            <p class="mt-2 text-center" id="currentDescriptor">Descripteur en cours: Aucun</p>
+        </div>
+        
+        <div class="form-group text-center">
+            <button type="submit" class="btn btn-primary btn-lg" id="calculateBtn">Calculer les descripteurs</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var reloadedAfterCompletion = false;
+    
+    // Fonction pour mettre à jour la barre de progression
+    function updateProgress() {
+        $.getJSON("{{ url_for('descriptors.get_progress') }}", function(data) {
+            // Mettre à jour la barre de progression
+            var progress = data.progress;
+            $("#progressBar").css("width", progress + "%");
+            $("#progressBar").attr("aria-valuenow", progress);
+            $("#progressBar").text(progress.toFixed(1) + "%");
+            
+            // Mettre à jour le descripteur en cours
+            $("#currentDescriptor").text("Descripteur en cours: " + data.descriptor);
+            
+            // Si le calcul est en cours, désactiver le bouton et continuer à mettre à jour
+            if (data.is_running) {
+                $("#calculateBtn").prop("disabled", true);
+                $("#calculateBtn").text("Calcul en cours...");
+                setTimeout(updateProgress, 1000);
+            } else {
+                $("#calculateBtn").prop("disabled", false);
+                $("#calculateBtn").text("Calculer les descripteurs");
+                
+                // Si le calcul est terminé, recharger la page UNE SEULE FOIS pour mettre à jour le statut
+                if (data.descriptor === "Terminé" && !reloadedAfterCompletion) {
+                    reloadedAfterCompletion = true;
+                    location.reload();
+                }
+            }
+        });
+    }
+    
+    // Vérifier si un calcul est en cours au chargement de la page
+    $(document).ready(function() {
+        $.getJSON("{{ url_for('descriptors.get_progress') }}", function(data) {
+            if (data.is_running) {
+                updateProgress();
+            }
+        });
+    });
+</script>
+{% endblock %} 
