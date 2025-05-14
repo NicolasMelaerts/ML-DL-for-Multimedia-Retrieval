@@ -27,6 +27,7 @@ class SearchPage(QtWidgets.QWidget):
         self.results = []
         self.class_counts = {}  # Pour stocker le nombre d'images par classe
         self.metrics_data = {}  # Pour stocker les métriques d'évaluation
+        self.selected_descriptors = []  # Pour stocker les descripteurs sélectionnés
         
     def setupUi(self):
         self.setObjectName("SearchPage")
@@ -472,6 +473,9 @@ class SearchPage(QtWidgets.QWidget):
         self.progressBar.setValue(100)
         QtWidgets.QApplication.processEvents()
         
+        # Mettre à jour la liste des descripteurs sélectionnés
+        self.selected_descriptors = loaded_descriptors
+        
         # Compter le nombre d'images par classe
         self.countClassImages()
         
@@ -506,38 +510,70 @@ class SearchPage(QtWidgets.QWidget):
                             
                             self.class_counts[class_id] = image_count
     
+    def get_algo_choice(self, desc_type):
+        """Retourne l'algo_choice correspondant au type de descripteur"""
+        mapping = {
+            'BGR': 1,
+            'HOG': 2,
+            'LBP': 3,
+            'ORB': 4,
+            'HSV': 5,
+            'GLCM': 6,
+            'SIFT': 7
+        }
+        return mapping.get(desc_type, 0)
+
+    def adapt_distance_for_descriptor(self, desc_type, distance_name):
+        """Adapte la mesure de distance au type de descripteur"""
+        if desc_type in ['ORB', 'SIFT'] and distance_name not in ["Brute force", "Flann"]:
+            return "Brute force"
+        elif desc_type in ['BGR', 'HSV'] and distance_name in ["Chi carre", "Intersection", "Bhattacharyya", "Correlation"]:
+            return distance_name
+        return distance_name
+    
     def search(self):
-        """Effectue la recherche d'images similaires"""
+        """Effectue la recherche d'images similaires avec combinaison de descripteurs"""
         # Vérifier qu'une image est chargée
         if not self.image_path:
             QtWidgets.QMessageBox.warning(self, "Attention", 
                                          "Veuillez d'abord charger une image requête.")
             return
         
-        # Vérifier que des descripteurs sont chargés
-        if not self.features:
+        # Vérifier que des descripteurs sont chargés et sélectionnés
+        selected_descriptors = []
+        if self.checkBoxColor.isChecked() and 'BGR' in self.features:
+            selected_descriptors.append('BGR')
+        if self.checkBoxHSV.isChecked() and 'HSV' in self.features:
+            selected_descriptors.append('HSV')
+        if self.checkBoxGLCM.isChecked() and 'GLCM' in self.features:
+            selected_descriptors.append('GLCM')
+        if self.checkBoxHOG.isChecked() and 'HOG' in self.features:
+            selected_descriptors.append('HOG')
+        if self.checkBoxLBP.isChecked() and 'LBP' in self.features:
+            selected_descriptors.append('LBP')
+        if self.checkBoxORB.isChecked() and 'ORB' in self.features:
+            selected_descriptors.append('ORB')
+        if self.checkBoxSIFT.isChecked() and 'SIFT' in self.features:
+            selected_descriptors.append('SIFT')
+        
+        if not selected_descriptors:
             QtWidgets.QMessageBox.warning(self, "Attention", 
-                                         "Veuillez d'abord charger les descripteurs.")
+                                         "Veuillez sélectionner au moins un descripteur disponible.")
             return
+        
+        # Mémoriser les descripteurs sélectionnés
+        self.selected_descriptors = selected_descriptors
         
         # Réinitialiser la barre de progression
         self.progressBar.setValue(0)
         
-        # Réinitialiser les métriques au début de la recherche
+        # Réinitialiser les métriques
         self.metrics_data = {}
         self.metricsButton.setEnabled(False)
         
-        # Afficher les descripteurs chargés pour le débogage
-        print(f"Descripteurs chargés: {list(self.features.keys())}")
-        for desc_type, features in self.features.items():
-            print(f"Nombre de descripteurs {desc_type}: {len(features)}")
-        
         # Déterminer le nombre d'images à afficher
         display_option = self.displayComboBox.currentText()
-        if display_option == "Top 20":
-            k = 20
-        else:  # Top 50
-            k = 50
+        k = 20 if display_option == "Top 20" else 50
         
         # Récupérer la distance sélectionnée
         distance_name = self.distanceComboBox.currentText()
@@ -546,50 +582,28 @@ class SearchPage(QtWidgets.QWidget):
         # Nettoyer les résultats précédents
         self.clearResults()
         
-        # Effectuer la recherche pour chaque type de descripteur
-        combined_results = []
-        total_descriptors = len(self.features)
-        processed_descriptors = 0
+        # Dictionnaire pour stocker tous les résultats avec leurs scores
+        all_results = {}  # {image_path: {desc_type: score, ...}, ...}
         
-        for desc_type, features in self.features.items():
-            if not features:
-                print(f"Aucun descripteur {desc_type} chargé")
-                processed_descriptors += 1
-                continue
-            
+        # Pour normaliser les scores à la fin
+        max_scores = {}  # {desc_type: max_score, ...}
+        min_scores = {}  # {desc_type: min_score, ...}
+        
+        # Effectuer la recherche pour chaque descripteur sélectionné
+        for desc_idx, desc_type in enumerate(selected_descriptors):
             # Mettre à jour la barre de progression
-            self.progressBar.setValue(int(100 * processed_descriptors / total_descriptors))
-            QtWidgets.QApplication.processEvents()  # Forcer la mise à jour de l'interface
-            
-            # Déterminer l'algo_choice en fonction du type de descripteur
-            if desc_type == 'BGR':
-                algo_choice = 1
-            elif desc_type == 'HOG':
-                algo_choice = 2
-            elif desc_type == 'LBP':
-                algo_choice = 3
-            elif desc_type == 'ORB':
-                algo_choice = 4
-            elif desc_type == 'HSV':
-                algo_choice = 5
-            elif desc_type == 'GLCM':
-                algo_choice = 6
-            elif desc_type == 'SIFT':
-                algo_choice = 7
-            else:
-                processed_descriptors += 1
-                continue
-            
-            print(f"Recherche avec {desc_type} (algo_choice={algo_choice})")
-            
+            progress = int(100 * desc_idx / len(selected_descriptors))
+            self.progressBar.setValue(progress)
+            QtWidgets.QApplication.processEvents()
             # Extraire les caractéristiques de l'image requête
             try:
+                # Déterminer l'algo_choice en fonction du type de descripteur
+                algo_choice = self.get_algo_choice(desc_type)
                 req_features = extractReqFeatures(self.image_path, algo_choice)
-                print(f"Caractéristiques extraites pour l'image requête: {req_features.shape if hasattr(req_features, 'shape') else 'None'}")
                 
                 # Vérifier si les dimensions sont compatibles avec les descripteurs de la base
-                if len(features) > 0:
-                    sample_feature = features[0][1]  # Prendre le premier descripteur comme exemple
+                if len(self.features[desc_type]) > 0:
+                    sample_feature = self.features[desc_type][0][1]  # Prendre le premier descripteur comme exemple
                     if hasattr(req_features, 'shape') and hasattr(sample_feature, 'shape'):
                         if req_features.shape != sample_feature.shape:
                             print(f"Dimensions incompatibles: {req_features.shape} vs {sample_feature.shape}")
@@ -597,56 +611,81 @@ class SearchPage(QtWidgets.QWidget):
                             req_features = np.resize(req_features, sample_feature.shape)
                             print(f"Descripteur redimensionné à: {req_features.shape}")
                 
-                # Adapter la distance pour les descripteurs spécifiques
-                current_distance = distance_name
-                if desc_type in ['ORB', 'SIFT'] and distance_name not in ["Brute force", "Flann"]:
-                    current_distance = "Brute force"
-                    print(f"Distance adaptée pour {desc_type}: {current_distance}")
-                elif desc_type in ['BGR', 'HSV'] and distance_name in ["Chi carre", "Intersection", "Bhattacharyya", "Correlation"]:
-                    # Utiliser la distance spécifique pour les histogrammes
-                    current_distance = distance_name
-                    print(f"Utilisation de la distance {current_distance} pour {desc_type}")
+                # Adapter la distance pour ce descripteur
+                current_distance = self.adapt_distance_for_descriptor(desc_type, distance_name)
                 
                 # Rechercher les voisins
-                neighbors = getkVoisins(features, req_features, k, current_distance)
+                neighbors = getkVoisins(self.features[desc_type], req_features, k, current_distance)
                 
-                # Ajouter les résultats à la liste combinée
-                for path, _, dist in neighbors:
-                    combined_results.append((path, dist, desc_type))
+                # Initialiser les min/max pour ce descripteur
+                if neighbors:
+                    min_score = float('inf')
+                    max_score = float('-inf')
+                    
+                    # Ajouter les résultats au dictionnaire global
+                    for path, _, dist in neighbors:
+                        if path not in all_results:
+                            all_results[path] = {}
+                        
+                        # Stocker le score pour ce descripteur
+                        score = dist
+                        all_results[path][desc_type] = score
+                        
+                        # Mettre à jour min/max
+                        min_score = min(min_score, score)
+                        max_score = max(max_score, score)
+                    
+                    # Stocker min/max pour ce descripteur
+                    min_scores[desc_type] = min_score
+                    max_scores[desc_type] = max_score
                 
                 print(f"Recherche avec {desc_type} terminée: {len(neighbors)} résultats trouvés")
             except Exception as e:
                 print(f"Erreur lors de la recherche avec {desc_type}: {str(e)}")
                 import traceback
                 traceback.print_exc()
-            
-            # Mettre à jour la barre de progression
-            processed_descriptors += 1
-            self.progressBar.setValue(int(100 * processed_descriptors / total_descriptors))
-            QtWidgets.QApplication.processEvents()  # Forcer la mise à jour de l'interface
         
-        # Trier les résultats combinés par distance
-        if distance_name in ["Cosinus"]:
-            combined_results.sort(key=lambda x: -x[1])  # Tri décroissant pour les mesures de similarité
-        else:
-            combined_results.sort(key=lambda x: x[1])  # Tri croissant pour les mesures de distance
+        # Combiner les scores pour tous les descripteurs
+        combined_results = []
+        
+        for path, scores in all_results.items():
+            # Calculer un score combiné normalisé
+            combined_score = 0
+            num_descriptors = 0
+            contributed_descriptors = []
+            
+            for desc_type, score in scores.items():
+                # Normaliser le score entre 0 et 1 (0 = meilleur, 1 = pire)
+                min_score = min_scores.get(desc_type, 0)
+                max_score = max_scores.get(desc_type, 1)
+                score_range = max_score - min_score
+                
+                if score_range > 0:
+                    # Pour les mesures de distance (plus petit = meilleur)
+                    if distance_name not in ["Cosinus", "Correlation", "Intersection"]:
+                        normalized_score = (score - min_score) / score_range
+                    else:
+                        # Pour les mesures de similarité (plus grand = meilleur)
+                        normalized_score = 1 - (score - min_score) / score_range
+                    
+                    # Ajouter le score normalisé (sans pondération)
+                    combined_score += normalized_score
+                    num_descriptors += 1
+                    contributed_descriptors.append(desc_type)
+            
+            # Calculer la moyenne des scores normalisés
+            if num_descriptors > 0:
+                avg_score = combined_score / num_descriptors
+                combined_results.append((path, avg_score, "+".join(contributed_descriptors)))
+        
+        # Trier les résultats par score combiné
+        combined_results.sort(key=lambda x: x[1])
         
         # Prendre les k premiers résultats
         self.results = combined_results[:k]
         
-        print(f"Nombre total de résultats combinés: {len(combined_results)}")
-        print(f"Nombre de résultats après tri et limitation: {len(self.results)}")
-        
         # Afficher les résultats
         self.displayResults()
-        
-        # Calculer et afficher les métriques
-        if self.results:
-            self.calculateMetrics()
-        else:
-            print("Aucun résultat à afficher, impossible de calculer les métriques")
-            # Réinitialiser les métriques sans référence à self.metricsTable
-            self.metrics_data = {}
         
         # Finaliser la barre de progression
         self.progressBar.setValue(100)
@@ -696,7 +735,9 @@ class SearchPage(QtWidgets.QWidget):
                 layout.addWidget(imageLabel)
                 
                 # Label pour les informations
-                infoLabel = QtWidgets.QLabel(f"{os.path.basename(path)}\nDist: {dist:.4f}\nType: {desc_type}")
+                # Ajout d'une information sur le fait que c'est un score combiné
+                dist_info = f"Score: {dist:.4f} (combiné)" if len(self.selected_descriptors) > 1 else f"Dist: {dist:.4f}"
+                infoLabel = QtWidgets.QLabel(f"{os.path.basename(path)}\n{dist_info}\nType: {desc_type}")
                 infoLabel.setAlignment(QtCore.Qt.AlignCenter)
                 layout.addWidget(infoLabel)
                 
@@ -809,7 +850,6 @@ class SearchPage(QtWidgets.QWidget):
         metrics_window = MetricsWindow(self, self.metrics_data)
         metrics_window.exec_()
 
-# Ajouter cette nouvelle classe pour la fenêtre des métriques
 class MetricsWindow(QtWidgets.QDialog):
     def __init__(self, parent=None, metrics_data=None):
         super(MetricsWindow, self).__init__(parent)
@@ -821,6 +861,12 @@ class MetricsWindow(QtWidgets.QDialog):
     def setupUi(self):
         # Layout principal
         self.mainLayout = QtWidgets.QVBoxLayout(self)
+        
+        # Information sur les descripteurs combinés
+        if hasattr(self.parent(), 'selected_descriptors') and len(self.parent().selected_descriptors) > 1:
+            info_label = QtWidgets.QLabel(f"Métriques calculées avec combinaison de descripteurs: {', '.join(self.parent().selected_descriptors)}")
+            info_label.setStyleSheet("font-weight: bold; color: blue;")
+            self.mainLayout.addWidget(info_label)
         
         # Tableau des métriques
         self.metricsTable = QtWidgets.QTableWidget(5, 2)
@@ -844,7 +890,11 @@ class MetricsWindow(QtWidgets.QDialog):
             
             # Initialiser les valeurs à N/A ou aux valeurs fournies
             value = self.metrics_data.get(metric, "N/A")
-            value_item = QtWidgets.QTableWidgetItem(str(value))
+            if isinstance(value, float):
+                value_str = f"{value:.4f}"
+            else:
+                value_str = str(value)
+            value_item = QtWidgets.QTableWidgetItem(value_str)
             self.metricsTable.setItem(i, 1, value_item)
         
         # Étirer les colonnes pour remplir l'espace disponible
@@ -881,7 +931,7 @@ class MetricsWindow(QtWidgets.QDialog):
                 ax.set_ylabel('Précision')
                 ax.set_title('Courbe Précision-Rappel')
                 ax.grid(True)
-                ax.set_xlim([0.0, 1.0])
+                ax.set_xlim([0.0, max(0.1, max(recall))])
                 ax.set_ylim([0.0, 1.05])
                 self.rpCanvas.draw()
         except Exception as e:
