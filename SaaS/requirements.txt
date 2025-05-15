@@ -1,0 +1,13 @@
+flask
+sentence-transformers
+numpy
+pillow
+opencv-python
+opencv-contrib-python
+scikit-image
+scikit-learn
+scipy
+PyWavelets
+matplotlib
+torch
+gdown
