@@ -13,6 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from PIL import Image
+import time
 
 class TextSearchPage(QtWidgets.QWidget):
     def __init__(self, parent=None, model_path="Transformer/sentence_transformer_model"):
@@ -20,6 +21,15 @@ class TextSearchPage(QtWidgets.QWidget):
         self.model_path = model_path
         self.model = None
         self.captions = {}
+        
+        # Configuration des animaux et races pour la recherche rapide d'images
+        self.animaux = ["araignee", "chiens", "oiseaux", "poissons", "singes"]
+        self.araignees = ["barn spider", "garden spider", "orb-weaving spider", "tarantula", "trap_door spider", "wolf spider"]
+        self.chiens = ["boxer", "Chihuahua", "golden\x20retriever", "Labrador\x20retriever", "Rottweiler", "Siberian\x20husky"]
+        self.oiseaux = ["blue jay", "bulbul", "great grey owl", "parrot", "robin", "vulture"]
+        self.poissons = ["dogfish", "eagle ray", "guitarfish", "hammerhead", "ray", "tiger shark"]
+        self.singes = ["baboon", "chimpanzee", "gorilla", "macaque", "orangutan", "squirrel monkey"]
+        
         self.setupUi()
         
     def setupUi(self):
@@ -251,8 +261,115 @@ class TextSearchPage(QtWidgets.QWidget):
             )
             self.progressBar.setValue(0)
     
+    def find_matching_race(self, race_name, races_list):
+        """
+        Trouve la race correspondante dans la liste, en tenant compte des différents formats
+        """
+        if not races_list:
+            return None
+        
+        # Normaliser le nom de race du fichier
+        race_name_lower = race_name.lower()
+        
+        # 1. Essayer une correspondance directe
+        for race in races_list:
+            if race.lower() == race_name_lower:
+                return race
+        
+        # 2. Essayer en remplaçant les espaces par des underscores
+        for race in races_list:
+            if race.lower().replace(' ', '_') == race_name_lower:
+                return race
+        
+        # 3. Essayer en supprimant les espaces
+        for race in races_list:
+            if race.lower().replace(' ', '') == race_name_lower:
+                return race
+        
+        # 4. Essayer une correspondance partielle
+        for race in races_list:
+            race_lower = race.lower()
+            if race_name_lower in race_lower or race_lower in race_name_lower:
+                return race
+            
+            # Essayer aussi sans les espaces
+            race_lower_no_spaces = race_lower.replace(' ', '')
+            if race_name_lower in race_lower_no_spaces or race_lower_no_spaces in race_name_lower:
+                return race
+        
+        # Si aucune correspondance n'est trouvée, retourner la première race de la liste
+        return races_list[0]
+
+    def find_image_path(self, image_filename, animal=None, race=None):
+        """
+        Trouve le chemin d'une image en utilisant directement les informations d'animal et de race
+        """
+        # Si animal et race sont fournis, utiliser directement ces informations
+        if animal and race:
+            # Essayer différentes extensions
+            for img_ext in ['.jpg', '.jpeg', '.png']:
+                # Extraire le nom de base sans extension
+                base_name = os.path.splitext(image_filename)[0]
+                direct_path = os.path.join('MIR_DATASETS_B', animal, race, f"{base_name}{img_ext}")
+                if os.path.exists(direct_path):
+                    return direct_path
+            
+            # Si aucune correspondance exacte, essayer de trouver la race correspondante
+            races_list = None
+            if animal == "araignee":
+                races_list = self.araignees
+            elif animal == "chiens":
+                races_list = self.chiens
+            elif animal == "oiseaux":
+                races_list = self.oiseaux
+            elif animal == "poissons":
+                races_list = self.poissons
+            elif animal == "singes":
+                races_list = self.singes
+            
+            if races_list:
+                matching_race = self.find_matching_race(race, races_list)
+                if matching_race:
+                    for img_ext in ['.jpg', '.jpeg', '.png']:
+                        base_name = os.path.splitext(image_filename)[0]
+                        direct_path = os.path.join('MIR_DATASETS_B', animal, matching_race, f"{base_name}{img_ext}")
+                        if os.path.exists(direct_path):
+                            return direct_path
+        
+        # Si on arrive ici ou si animal/race ne sont pas fournis, parcourir tous les animaux et races
+        # Extraire le nom de base sans extension
+        base_name = os.path.splitext(image_filename)[0]
+        
+        # Parcourir tous les animaux et races
+        for animal in self.animaux:
+            races_list = None
+            if animal == "araignee":
+                races_list = self.araignees
+            elif animal == "chiens":
+                races_list = self.chiens
+            elif animal == "oiseaux":
+                races_list = self.oiseaux
+            elif animal == "poissons":
+                races_list = self.poissons
+            elif animal == "singes":
+                races_list = self.singes
+            
+            if races_list:
+                for race in races_list:
+                    # Essayer de trouver l'image dans ce dossier
+                    for img_ext in ['.jpg', '.jpeg', '.png']:
+                        image_name = f"{base_name}{img_ext}"
+                        direct_path = os.path.join('MIR_DATASETS_B', animal, race, image_name)
+                        if os.path.exists(direct_path):
+                            return direct_path
+        
+        # Si on arrive ici, on n'a pas trouvé le fichier
+        return None
+
     def search_images(self):
         """Recherche les images correspondant à la description"""
+        total_start_time = time.time()
+        
         # Vérifier que le modèle est chargé
         if self.model is None:
             QtWidgets.QMessageBox.warning(
@@ -275,8 +392,29 @@ class TextSearchPage(QtWidgets.QWidget):
         # Nombre de résultats
         top_k = self.resultsSpinBox.value()
         
+        # Effacer les résultats précédents
+        for i in reversed(range(self.scrollAreaLayout.count())):
+            widget = self.scrollAreaLayout.itemAt(i).widget()
+            if widget is not None:
+                widget.deleteLater()
+        
+        # Afficher un message "Recherche en cours..."
+        self.statusLabel = QtWidgets.QLabel("Recherche en cours...")
+        self.statusLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.statusLabel.setStyleSheet("font-weight: bold; color: blue; font-size: 14px;")
+        self.scrollAreaLayout.addWidget(self.statusLabel)
+        
+        # Désactiver le bouton de recherche pendant la recherche
+        self.searchButton.setEnabled(False)
+        self.searchButton.setText("Recherche en cours...")
+        QtWidgets.QApplication.processEvents()  # Forcer la mise à jour de l'interface
+        
         # Encoder la requête
+        print("\n--- MESURE DES PERFORMANCES ---")
+        encoding_start = time.time()
         query_embedding = self.model.encode(query)
+        encoding_time = time.time() - encoding_start
+        print(f"1. Encodage de la requête: {encoding_time:.4f} secondes")
         
         # Dossier des embeddings
         embeddings_dir = self.embeddingsEdit.text()
@@ -285,16 +423,24 @@ class TextSearchPage(QtWidgets.QWidget):
         results = []
         
         # Parcours des fichiers d'embeddings
+        embedding_search_start = time.time()
+        similarity_calc_total = 0
+        image_path_search_total = 0
+        file_count = 0
+        
         for root, dirs, files in os.walk(embeddings_dir):
             for file in files:
                 if file.endswith('_embedding.txt'):
+                    file_count += 1
                     emb_path = os.path.join(root, file)
                     try:
                         # Charger l'embedding
                         emb = np.fromstring(open(emb_path).read(), sep=' ')
                         
                         # Calculer la similarité
+                        sim_start = time.time()
                         sim = cosine_similarity([query_embedding], [emb])[0][0]
+                        similarity_calc_total += time.time() - sim_start
                         
                         # Extraire le chemin relatif
                         relative_path = os.path.relpath(emb_path, embeddings_dir)
@@ -302,12 +448,14 @@ class TextSearchPage(QtWidgets.QWidget):
                         
                         # Extraire l'animal et la race
                         path_parts = relative_path.split('/')
-                        animal = path_parts[0] if len(path_parts) > 0 else "Inconnu"
-                        race = path_parts[1] if len(path_parts) > 1 else "Inconnue"
+                        animal = path_parts[0] if len(path_parts) > 0 else None
+                        race = path_parts[1] if len(path_parts) > 1 else None
                         
                         # Construire le chemin de l'image
                         image_filename = os.path.basename(relative_path)
-                        image_path = find_image_in_directory('MIR_DATASETS_B', image_filename)
+                        path_search_start = time.time()
+                        image_path = self.find_image_path(image_filename, animal, race)
+                        image_path_search_total += time.time() - path_search_start
                         
                         # Récupérer la description si disponible
                         caption = ""
@@ -316,19 +464,56 @@ class TextSearchPage(QtWidgets.QWidget):
                                 caption = self.captions[key]
                                 break
                         
-                        # Ajouter aux résultats
-                        results.append((image_path, caption, sim, animal, race))
+                        # Ajouter aux résultats seulement si l'image est trouvée
+                        if image_path:
+                            results.append((image_path, caption, sim, animal, race))
                     except Exception as e:
                         print(f"Erreur lors du traitement de {emb_path}: {str(e)}")
         
+        embedding_search_time = time.time() - embedding_search_start
+        print(f"2. Parcours des embeddings ({file_count} fichiers): {embedding_search_time:.4f} secondes")
+        print(f"3. Calcul de similarité (total): {similarity_calc_total:.4f} secondes")
+        print(f"   Moyenne par image: {similarity_calc_total/max(1, file_count):.6f} secondes")
+        print(f"4. Recherche des chemins d'images (total): {image_path_search_total:.4f} secondes")
+        print(f"   Moyenne par image: {image_path_search_total/max(1, file_count):.6f} secondes")
+        
+        # Supprimer le message "Recherche en cours..."
+        if hasattr(self, 'statusLabel'):
+            self.statusLabel.deleteLater()
+            delattr(self, 'statusLabel')
+        
         # Trier les résultats par similarité décroissante
+        sort_start = time.time()
         results.sort(key=lambda x: x[2], reverse=True)
+        sort_time = time.time() - sort_start
+        print(f"5. Tri des résultats: {sort_time:.4f} secondes")
         
         # Limiter aux top_k résultats
         results = results[:top_k]
         
+        # Réactiver le bouton de recherche
+        self.searchButton.setEnabled(True)
+        self.searchButton.setText("Rechercher")
+        
+        # Afficher un message temporaire "Recherche terminée"
+        self.statusLabel = QtWidgets.QLabel("Recherche terminée !")
+        self.statusLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.statusLabel.setStyleSheet("font-weight: bold; color: green; font-size: 14px;")
+        self.scrollAreaLayout.addWidget(self.statusLabel)
+        QtWidgets.QApplication.processEvents()  # Forcer la mise à jour de l'interface
+        
+        # Programmer la suppression du message après 3 secondes
+        QtCore.QTimer.singleShot(3000, lambda: self.statusLabel.deleteLater() if hasattr(self, 'statusLabel') else None)
+        
         # Afficher les résultats
+        display_start = time.time()
         self.display_results(results)
+        display_time = time.time() - display_start
+        print(f"6. Affichage des résultats: {display_time:.4f} secondes")
+        
+        total_time = time.time() - total_start_time
+        print(f"Temps total de recherche: {total_time:.4f} secondes")
+        print("--------------------------------\n")
     
     def display_results(self, results):
         """Affiche les résultats de la recherche"""
@@ -403,24 +588,4 @@ class TextSearchPage(QtWidgets.QWidget):
                 line = QtWidgets.QFrame()
                 line.setFrameShape(QtWidgets.QFrame.HLine)
                 line.setFrameShadow(QtWidgets.QFrame.Sunken)
-                self.scrollAreaLayout.addWidget(line)
-
-# Fonction pour trouver une image dans un dossier et ses sous-dossiers
-def find_image_in_directory(base_dir, image_name):
-    """
-    Recherche récursivement une image dans un dossier et ses sous-dossiers.
-    
-    Args:
-        base_dir: Dossier de base pour la recherche
-        image_name: Nom de l'image à rechercher (sans extension)
-        
-    Returns:
-        Chemin complet de l'image si trouvée, None sinon
-    """
-    for root, dirs, files in os.walk(base_dir):
-        for file in files:
-            if file.lower().endswith(('.jpg', '.jpeg', '.png')):
-                file_name_without_ext = os.path.splitext(file)[0]
-                if file_name_without_ext == image_name:
-                    return os.path.join(root, file)
-    return None 
+                self.scrollAreaLayout.addWidget(line) 

@@ -29,6 +29,9 @@ class SearchPage(QtWidgets.QWidget):
         self.metrics_data = {}  # Pour stocker les métriques d'évaluation
         self.selected_descriptors = []  # Pour stocker les descripteurs sélectionnés
         
+        # Vérifier les descripteurs disponibles à l'initialisation
+        self.checkAvailableDescriptors()
+    
     def setupUi(self):
         self.setObjectName("SearchPage")
         self.resize(1200, 800)
@@ -248,9 +251,6 @@ class SearchPage(QtWidgets.QWidget):
         # Construire le chemin complet vers le sous-dossier du descripteur
         folder_path = os.path.join('Descripteurs', folder_name)
         
-        # Afficher les dossiers disponibles pour le débogage
-        print(f"Dossiers disponibles dans Descripteurs: {os.listdir('Descripteurs') if os.path.exists('Descripteurs') else 'Dossier Descripteurs non trouvé'}")
-        
         # Vérifier si le dossier existe
         if not os.path.exists(folder_path):
             print(f"Le dossier {folder_path} n'existe pas.")
@@ -274,9 +274,13 @@ class SearchPage(QtWidgets.QWidget):
         
         print(f"Nombre de fichiers trouvés: {total_files}")
         
+        # Utiliser un dictionnaire pour accélérer la recherche d'images
+        image_path_cache = {}
+        
         # Traiter les fichiers par lots pour mettre à jour la barre de progression
         batch_size = max(1, total_files // 100)  # Diviser en environ 100 lots
         
+        # Utiliser numpy pour charger les descripteurs plus rapidement
         for i in range(0, total_files, batch_size):
             # Traiter un lot de fichiers
             batch_files = all_files[i:i+batch_size]
@@ -308,23 +312,29 @@ class SearchPage(QtWidgets.QWidget):
                     # Construire le chemin de l'image
                     image_path = os.path.join(self.filenames, animal, breed, image_name)
                     
+                    # Vérifier si le chemin existe déjà dans le cache
+                    if image_name in image_path_cache:
+                        image_path = image_path_cache[image_name]
+                        features.append((image_path, feature))
+                        continue
+                    
                     if os.path.exists(image_path):
+                        # Ajouter au cache
+                        image_path_cache[image_name] = image_path
                         features.append((image_path, feature))
                     else:
-                        print(f"Image introuvable: {image_path}")
                         # Essayer de trouver l'image avec la fonction find_image_in_directory
                         image_name_without_ext = os.path.splitext(image_name)[0]
                         found_path = self.find_image_in_directory(self.filenames, image_name_without_ext)
                         if found_path:
-                            print(f"Image trouvée à: {found_path}")
+                            # Ajouter au cache
+                            image_path_cache[image_name] = found_path
                             features.append((found_path, feature))
                         else:
-                            print(f"Image introuvable même après recherche récursive")
-                    
+                            print(f"Image introuvable même après recherche: {image_name}")
+                
                 except Exception as e:
                     print(f"Erreur lors du chargement de {file_name}: {str(e)}")
-                    import traceback
-                    traceback.print_exc()
             
             # Mettre à jour la barre de progression
             progress_value = min(100, int(100 * (i + len(batch_files)) / total_files))
@@ -336,7 +346,7 @@ class SearchPage(QtWidgets.QWidget):
 
     def find_image_in_directory(self, base_dir, image_name):
         """
-        Recherche récursivement une image dans un dossier et ses sous-dossiers.
+        Recherche efficacement une image dans la structure de dossiers.
         
         Args:
             base_dir: Dossier de base pour la recherche
@@ -345,12 +355,38 @@ class SearchPage(QtWidgets.QWidget):
         Returns:
             Chemin complet de l'image si trouvée, None sinon
         """
-        for root, dirs, files in os.walk(base_dir):
-            for file in files:
-                if file.lower().endswith(('.jpg', '.jpeg', '.png')):
-                    file_name_without_ext = os.path.splitext(file)[0]
-                    if file_name_without_ext == image_name:
-                        return os.path.join(root, file)
+        # Liste des animaux et races pour la recherche rapide
+        animaux = ["araignee", "chiens", "oiseaux", "poissons", "singes"]
+        araignees = ["barn spider", "garden spider", "orb-weaving spider", "tarantula", "trap_door spider", "wolf spider"]
+        chiens = ["boxer", "Chihuahua", "golden\x20retriever", "Labrador\x20retriever", "Rottweiler", "Siberian\x20husky"]
+        oiseaux = ["blue jay", "bulbul", "great grey owl", "parrot", "robin", "vulture"]
+        poissons = ["dogfish", "eagle ray", "guitarfish", "hammerhead", "ray", "tiger shark"]
+        singes = ["baboon", "chimpanzee", "gorilla", "macaque", "orangutan", "squirrel monkey"]
+        
+        # Essayer différentes extensions
+        for img_ext in ['.jpg', '.jpeg', '.png']:
+            # Parcourir tous les animaux et races
+            for animal in animaux:
+                races_list = None
+                if animal == "araignee":
+                    races_list = araignees
+                elif animal == "chiens":
+                    races_list = chiens
+                elif animal == "oiseaux":
+                    races_list = oiseaux
+                elif animal == "poissons":
+                    races_list = poissons
+                elif animal == "singes":
+                    races_list = singes
+                
+                if races_list:
+                    for race in races_list:
+                        # Essayer de trouver l'image dans ce dossier
+                        image_path = os.path.join(base_dir, animal, race, f"{image_name}{img_ext}")
+                        if os.path.exists(image_path):
+                            return image_path
+        
+        # Si on arrive ici, on n'a pas trouvé le fichier
         return None
     
     def loadDescriptors(self):
@@ -849,6 +885,49 @@ class SearchPage(QtWidgets.QWidget):
         """Affiche la fenêtre des métriques d'évaluation"""
         metrics_window = MetricsWindow(self, self.metrics_data)
         metrics_window.exec_()
+
+    def checkAvailableDescriptors(self):
+        """Vérifie quels descripteurs sont disponibles et met à jour l'interface"""
+        # Vérifier si le dossier Descripteurs existe
+        if not os.path.exists('Descripteurs'):
+            print("Le dossier Descripteurs n'existe pas")
+            return
+        
+        # Liste des descripteurs et leurs checkboxes correspondantes
+        descriptors_checkboxes = {
+            'BGR': self.checkBoxColor,
+            'HSV': self.checkBoxHSV,
+            'GLCM': self.checkBoxGLCM,
+            'HOG': self.checkBoxHOG,
+            'LBP': self.checkBoxLBP,
+            'ORB': self.checkBoxORB,
+            'SIFT': self.checkBoxSIFT
+        }
+        
+        # Parcourir les sous-dossiers de Descripteurs
+        available_descriptors = os.listdir('Descripteurs')
+        print(f"Descripteurs disponibles: {available_descriptors}")
+        
+        # Mettre à jour l'apparence des checkboxes
+        for desc_name, checkbox in descriptors_checkboxes.items():
+            if desc_name in available_descriptors:
+                # Vérifier si le dossier contient des fichiers .txt
+                desc_folder = os.path.join('Descripteurs', desc_name)
+                if os.path.isdir(desc_folder) and any(f.endswith('.txt') for f in os.listdir(desc_folder)):
+                    # Descripteur disponible et indexé
+                    checkbox.setEnabled(True)
+                    checkbox.setStyleSheet("")  # Style normal
+                    checkbox.setToolTip(f"Descripteur {desc_name} disponible")
+                else:
+                    # Dossier existe mais pas de fichiers .txt
+                    checkbox.setEnabled(False)
+                    checkbox.setStyleSheet("color: rgba(0, 0, 0, 128);")  # Semi-transparent
+                    checkbox.setToolTip(f"Descripteur {desc_name} non indexé")
+            else:
+                # Descripteur non disponible
+                checkbox.setEnabled(False)
+                checkbox.setStyleSheet("color: rgba(0, 0, 0, 128);")  # Semi-transparent
+                checkbox.setToolTip(f"Descripteur {desc_name} non disponible")
 
 class MetricsWindow(QtWidgets.QDialog):
     def __init__(self, parent=None, metrics_data=None):
