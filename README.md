@@ -1,6 +1,6 @@
 # 🎯 ML-DL for Multimedia Retrieval
 
-Ce projet utilise Docker pour encapsuler une application PyQt. Voici les étapes à suivre pour lancer le projet pour la première fois et les commandes utiles pour les exécutions ultérieures.
+Ce projet utilise Docker pour encapsuler une application PyQt et un service web Flask. Voici les étapes à suivre pour lancer le projet pour la première fois et les commandes utiles pour les exécutions ultérieures.
 
 ---
 
@@ -12,140 +12,137 @@ Ce projet utilise Docker pour encapsuler une application PyQt. Voici les étapes
 
 ---
 
-## 🚀 Premier lancement
+## 🚀 Premier lancement de l'application desktop
 
-### 1. Définir la variable d’environnement DISPLAY
+### 1. Télécharger les fichiers nécessaires
 
+Exécutez le script `download_and_unzip.sh` pour télécharger la base de données d'images, le dossier de transformer déjà entrainé pour le moteur de recherche par texte, et les features déjà extraites avec Google Colab pour les modèles Deep Learning. Ce script extraira ces fichiers dans le dossier `DESKTOP_APP`.
+   
+```bash
+./download_and_unzip.sh
+```
+
+### 2. Configurer l'affichage graphique
+
+#### Sur macOS
 ```bash
 export DISPLAY=192.168.1.40:0.0
 ```
+> Remplacer `192.168.1.40` par l'adresse IP de votre machine (trouvable via `ifconfig`, dans la section `en0`).
 
-> Remplacer `192.168.1.40` par l’adresse IP de votre machine (trouvable via `ifconfig`, dans la section `en0`).
-
----
-
-### 2. Démarrer XQuartz
-
-- Lancer l’application **XQuartz**
+- Lancer l'application **XQuartz**
 - Aller dans les préférences : `XQuartz > Preferences`
   - Onglet **Security** :
     - Cocher `Allow connections from network clients`
 - Redémarrer XQuartz si nécessaire
 - Dans le terminal, exécuter :
-
 ```bash
 xhost +
 ```
 
-
-### 3. Construire l’image Docker
-
-Depuis le répertoire du projet (où se trouve le Dockerfile) :
-
+#### Sur Linux
 ```bash
-docker build -t my_project .
+xhost +local:docker
 ```
 
----
+### 3. Construire l'image Docker
+
+```bash
+docker build -t desktop_app_image -f DESKTOP_APP/Dockerfile .
+```
 
 ### 4. Lancer le conteneur et exécuter le programme
 
 ```bash
-docker run -it --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v "$(pwd)":/opt/TP -w /opt/TP my_project bash
+docker run -it --rm \
+  -e DISPLAY=$DISPLAY \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -v "$(pwd)/DESKTOP_APP":/opt/DESKTOP_APP \
+  desktop_app_image
 ```
 
 ---
 
-## 🔁 Lancement ultérieur
+## 🔁 Lancement ultérieur de l'application desktop
 
-Si l’image Docker est déjà construite, il suffit de refaire :
+Si l'image Docker est déjà construite, il suffit de refaire :
 
+#### Sur macOS
 ```bash
 export DISPLAY=192.168.1.40:0.0
 xhost +
-docker run -it --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v "$(pwd)":/opt/TP -w /opt/TP my_project bash
+docker run -it --rm \
+  -e DISPLAY=$DISPLAY \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -v "$(pwd)/DESKTOP_APP":/opt/DESKTOP_APP \
+  desktop_app_image
 ```
 
-Puis dans le conteneur :
-
-1. **Télécharger les fichiers nécessaires :**
-
-   À l'intérieur du conteneur, exécutez le script `download_and_unzip.sh` pour télécharger la base de données d'images, le dossier de transformer déjà entrainé pour le moteur de recherche par texte, et les features déjà extraites avec google colabpour les modèles Deep Learning. Ce script extraira ces fichiers dans le dossier `DESKTOP_APP`.
-   
-   ```bash
-   ./download_and_unzip.sh
-   ```
-
-2. **Entrez dans le dossier `DESKTOP_APP` :**
-
+#### Sur Linux
 ```bash
-cd DESKTOP_APP
-```
-
-3. **Lancez l'application :**
-
-```bash
-python3 main.py
+xhost +local:docker
+docker run -it --rm \
+  -e DISPLAY=$DISPLAY \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -v "$(pwd)/DESKTOP_APP":/opt/DESKTOP_APP \
+  desktop_app_image
 ```
 
 ---
 
-## Lancement du SaaS
+## 🌐 Lancement du service web (SaaS)
 
-1. **Ouverture du docker avec le port 8080 en local:**
+### 1. Construire l'image Docker
 
 ```bash
-docker run -d --name flask_app -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v "$(pwd)":/opt/TP -w /opt/TP -p 8080:8080 my_project python3 SaaS/app.py
+docker build -t flaskapp_v1 -f SaaS/Dockerfile .
 ```
 
+### 2. Exécuter le conteneur
+
+#### En local
 ```bash
-docker restart flask_app 
+docker run -d \                                 
+  --name flask_app \
+  -v "$(pwd)":/opt/TP \
+  -w /opt/TP \
+  -p 8080:8080 \
+  flaskapp_v1 \
+  python3 SaaS/app.py
 ```
 
-2. **Lancement du SaaS sur serveur:**
+### 3. Accéder à l'application
 
-#TODO 
-
-Construire l'image Docker :
-
-```bash
-docker build -t flaskapp_v1 .
+```
+http://127.0.0.1:8080 # En local
 ```
 
-Executer le conteneur :
+### 4. Redémarrer le conteneur (si nécessaire)
 
 ```bash
-docker run -p 5000:5000 --name flaskapp_V1 flaskapp
+docker restart flaskapp
 ```
 
-En montant un volume pour le dossier `DESKTOP_APP` :
+### 5. Voir les logs
 
 ```bash
-docker run -d -p 5000:5000 --name flaskapp -v $(pwd)/DESKTOP_APP:/opt/DESKTOP_APP flaskapp_v1
-```
-
-En local : 
-
-```bash
-docker run -d -p 5050:5000 --name flaskapp -v "${PWD}/DESKTOP_APP:/opt/DESKTOP_APP" flaskapp_v1
-```
-docker run -d -p 5050:5000 --name flaskapp -v "${pwd}/SaaS:/opt/SaaS" flaskapp_v1
-
-
-Accéder à l'application :
-
-```bash
-http://163.172.234.110:5000
+docker logs flaskapp
 ```
 
 ---
 
 ## 🧹 Nettoyage (optionnel)
 
-Pour supprimer l’image Docker :
+Pour supprimer les conteneurs :
 
 ```bash
-docker image rm my_project
+docker rm flaskapp
+```
+
+Pour supprimer les images Docker :
+
+```bash
+docker image rm desktop_app_image flaskapp_v1
 ```
 
 Pour nettoyer les ressources inutilisées :
@@ -154,4 +151,11 @@ Pour nettoyer les ressources inutilisées :
 docker system prune
 ```
 
+---
+
+## 🚀 Lancement du service web (SaaS) avec docker compose
+
+```bash
+./run_compose.sh
+```
 

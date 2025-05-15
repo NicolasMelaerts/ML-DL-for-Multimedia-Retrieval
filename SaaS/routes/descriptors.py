@@ -4,17 +4,23 @@ import sys
 import time
 import threading
 
+# Chemin vers le dossier DESKTOP_APP
+DESKTOP_APP_PATH = "/opt/DESKTOP_APP"
+sys.path.append(DESKTOP_APP_PATH)
+
 # Importer les fonctions de calcul de descripteurs
-sys.path.append('DESKTOP_APP')
-from descriptors import (
-    generateHistogramme_Color, 
-    generateHistogramme_HSV, 
-    generateSIFT, 
-    generateORB,
-    generateGLCM,
-    generateLBP,
-    generateHOG
-)
+try:
+    from descriptors import (
+        generateHistogramme_Color, 
+        generateHistogramme_HSV, 
+        generateSIFT, 
+        generateORB,
+        generateGLCM,
+        generateLBP,
+        generateHOG
+    )
+except ImportError as e:
+    print(f"Erreur lors de l'importation du module descriptors: {e}")
 
 descriptors_bp = Blueprint('descriptors', __name__)
 
@@ -85,8 +91,15 @@ def index():
     descriptor_status = check_descriptor_status()
     
     if request.method == 'POST':
-        # Récupérer le dossier d'images
-        dataset_dir = request.form.get('dataset_dir', 'DESKTOP_APP/MIR_DATASETS_B')
+        # Récupérer le dossier d'images avec le chemin absolu
+        dataset_dir = request.form.get('dataset_dir')
+        
+        # Si aucun dossier n'est spécifié, utiliser le dossier par défaut
+        if not dataset_dir:
+            dataset_dir = os.path.join(DESKTOP_APP_PATH, "MIR_DATASETS_B")
+        # Si le chemin est relatif, le convertir en absolu
+        elif not os.path.isabs(dataset_dir) and not dataset_dir.startswith(DESKTOP_APP_PATH):
+            dataset_dir = os.path.join(DESKTOP_APP_PATH, dataset_dir)
         
         # Vérifier si le dossier existe
         if not os.path.exists(dataset_dir):
@@ -112,13 +125,16 @@ def index():
             flash("Un calcul est déjà en cours. Veuillez attendre qu'il se termine.", "warning")
             return redirect(url_for('descriptors.index'))
         
-        # Lancer le calcul des descripteurs dans un thread séparé
+        # Lancer le calcul des descripteurs en arrière-plan
         thread = threading.Thread(target=calculate_descriptors, args=(dataset_dir, selected_descriptors))
         thread.daemon = True
         thread.start()
         
-        flash("Calcul des descripteurs lancé en arrière-plan.", "info")
-        return redirect(url_for('descriptors.index'))
+        # Afficher un message de confirmation
+        flash("Calcul des descripteurs lancé en arrière-plan.", "success")
+        
+        # Ne pas rediriger, simplement rendre le template
+        # return redirect(url_for('descriptors.index'))
     
     return render_template(
         'descriptors.html', 
@@ -133,14 +149,14 @@ def calculate_descriptors(dataset_dir, selected_descriptors):
     global current_progress
     current_progress['is_running'] = True
     
-    # Créer le dossier DESKTOP_APP/Descripteurs s'il n'existe pas
-    descriptors_dir = "DESKTOP_APP/Descripteurs"
+    # Créer le dossier Descripteurs s'il n'existe pas
+    descriptors_dir = os.path.join(DESKTOP_APP_PATH, "Descripteurs")
     if not os.path.exists(descriptors_dir):
         os.makedirs(descriptors_dir)
     
     # Changer le répertoire de travail pour que les descripteurs soient créés au bon endroit
     original_dir = os.getcwd()
-    os.chdir("DESKTOP_APP")
+    os.chdir(DESKTOP_APP_PATH)
     
     results = []
     descriptor_status = check_descriptor_status()
@@ -159,20 +175,26 @@ def calculate_descriptors(dataset_dir, selected_descriptors):
             # Calculer le descripteur
             start_time = time.time()
             try:
+                # Si le chemin commence par DESKTOP_APP_PATH, on le rend relatif
+                if dataset_dir.startswith(DESKTOP_APP_PATH):
+                    relative_dataset_dir = dataset_dir.replace(f"{DESKTOP_APP_PATH}/", "")
+                else:
+                    relative_dataset_dir = dataset_dir
+                
                 if desc == 'BGR':
-                    generateHistogramme_Color(dataset_dir.replace('DESKTOP_APP/', ''), progress_callback=progress_callback)
+                    generateHistogramme_Color(relative_dataset_dir, progress_callback=progress_callback)
                 elif desc == 'HSV':
-                    generateHistogramme_HSV(dataset_dir.replace('DESKTOP_APP/', ''), progress_callback=progress_callback)
+                    generateHistogramme_HSV(relative_dataset_dir, progress_callback=progress_callback)
                 elif desc == 'SIFT':
-                    generateSIFT(dataset_dir.replace('DESKTOP_APP/', ''), progress_callback=progress_callback)
+                    generateSIFT(relative_dataset_dir, progress_callback=progress_callback)
                 elif desc == 'ORB':
-                    generateORB(dataset_dir.replace('DESKTOP_APP/', ''), progress_callback=progress_callback)
+                    generateORB(relative_dataset_dir, progress_callback=progress_callback)
                 elif desc == 'GLCM':
-                    generateGLCM(dataset_dir.replace('DESKTOP_APP/', ''), progress_callback=progress_callback)
+                    generateGLCM(relative_dataset_dir, progress_callback=progress_callback)
                 elif desc == 'LBP':
-                    generateLBP(dataset_dir.replace('DESKTOP_APP/', ''), progress_callback=progress_callback)
+                    generateLBP(relative_dataset_dir, progress_callback=progress_callback)
                 elif desc == 'HOG':
-                    generateHOG(dataset_dir.replace('DESKTOP_APP/', ''), progress_callback=progress_callback)
+                    generateHOG(relative_dataset_dir, progress_callback=progress_callback)
                 
                 elapsed_time = time.time() - start_time
                 results.append(f"Descripteur {desc} calculé en {elapsed_time:.2f} secondes")
@@ -200,7 +222,7 @@ def check_descriptor_status():
     }
     
     # Vérifier si le dossier Descripteurs existe
-    descriptors_dir = "DESKTOP_APP/Descripteurs"
+    descriptors_dir = os.path.join(DESKTOP_APP_PATH, "Descripteurs")
     if not os.path.exists(descriptors_dir):
         return status
     

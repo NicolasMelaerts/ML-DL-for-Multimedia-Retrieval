@@ -1,0 +1,508 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Moteur de Recherche d'Images</h1>
+    
+    <div class="row">
+        <!-- Panneau de contrôle -->
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-header">Descripteurs</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="checkBGR" value="BGR">
+                                <label class="form-check-label" for="checkBGR">BGR</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="checkHSV" value="HSV">
+                                <label class="form-check-label" for="checkHSV">HSV</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="checkGLCM" value="GLCM">
+                                <label class="form-check-label" for="checkGLCM">GLCM</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="checkHOG" value="HOG">
+                                <label class="form-check-label" for="checkHOG">HOG</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="checkLBP" value="LBP">
+                                <label class="form-check-label" for="checkLBP">LBP</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="checkORB" value="ORB">
+                                <label class="form-check-label" for="checkORB">ORB</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="checkSIFT" value="SIFT">
+                                <label class="form-check-label" for="checkSIFT">SIFT</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">Distance</div>
+                <div class="card-body">
+                    <select class="form-select" id="distanceSelect">
+                        <option value="Euclidienne">Euclidienne</option>
+                        <option value="Manhattan">Manhattan</option>
+                        <option value="Cosinus">Cosinus</option>
+                        <option value="Chi carre">Chi carré</option>
+                        <option value="Intersection">Intersection</option>
+                        <option value="Bhattacharyya">Bhattacharyya</option>
+                        <option value="Correlation">Correlation</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">Affichage</div>
+                <div class="card-body">
+                    <select class="form-select" id="displaySelect">
+                        <option value="20">Top 20</option>
+                        <option value="50">Top 50</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button id="loadFeaturesBtn" class="btn btn-primary mb-2 w-100">Charger les descripteurs</button>
+            <input type="file" id="imageInput" class="form-control mb-2" accept="image/*">
+            <button id="searchBtn" class="btn btn-success mb-2 w-100" disabled>Rechercher</button>
+            <button id="metricsBtn" class="btn btn-info mb-2 w-100" disabled>Voir les métriques</button>
+            <a href="/" class="btn btn-secondary w-100">Retour à l'accueil</a>
+        </div>
+        
+        <!-- Image requête et résultats -->
+        <div class="col-md-9">
+            <div class="card mb-4">
+                <div class="card-header">Image Requête</div>
+                <div class="card-body text-center">
+                    <div id="query-image-container">
+                        <p id="no-image-text">Aucune image chargée</p>
+                        <img id="query-image" style="display: none;">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="loading">
+                <div class="spinner-border loading-spinner" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+                <p>Recherche en cours...</p>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">Résultats de la Recherche</div>
+                <div class="card-body">
+                    <div id="results-container" class="row">
+                        <!-- Les résultats seront ajoutés ici dynamiquement -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal pour les métriques -->
+    <div class="modal fade" id="metricsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Métriques d'Évaluation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Métrique</th>
+                                <th>Valeur</th>
+                            </tr>
+                        </thead>
+                        <tbody id="metrics-table-body">
+                            <!-- Les métriques seront ajoutées ici dynamiquement -->
+                        </tbody>
+                    </table>
+                    
+                    <div>
+                        <canvas id="precision-recall-chart" class="metrics-chart"></canvas>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .image-container {
+        position: relative;
+        margin-bottom: 15px;
+    }
+    .result-image {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 5px;
+    }
+    .image-info {
+        font-size: 0.8rem;
+        margin-top: 5px;
+    }
+    .metrics-chart {
+        width: 100%;
+        height: 300px;
+    }
+    #query-image {
+        max-width: 100%;
+        max-height: 250px;
+        margin: 10px 0;
+    }
+    .loading {
+        display: none;
+        text-align: center;
+        margin: 20px 0;
+    }
+    .loading-spinner {
+        width: 3rem;
+        height: 3rem;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Variables globales
+    let queryImagePath = '';
+    let searchResults = [];
+    let metricsData = {};
+    let featuresLoaded = false;
+    let metricsChart = null;
+    
+    // Éléments DOM
+    const imageInput = document.getElementById('imageInput');
+    const queryImage = document.getElementById('query-image');
+    const noImageText = document.getElementById('no-image-text');
+    const resultsContainer = document.getElementById('results-container');
+    const loadFeaturesBtn = document.getElementById('loadFeaturesBtn');
+    const searchBtn = document.getElementById('searchBtn');
+    const metricsBtn = document.getElementById('metricsBtn');
+    const loadingIndicator = document.querySelector('.loading');
+    
+    // Initialisation
+    document.addEventListener('DOMContentLoaded', function() {
+        // Gestionnaires d'événements
+        imageInput.addEventListener('change', handleImageUpload);
+        loadFeaturesBtn.addEventListener('click', handleLoadFeatures);
+        searchBtn.addEventListener('click', handleSearch);
+        metricsBtn.addEventListener('click', showMetricsModal);
+        
+        // Initialiser le modal des métriques
+        window.metricsModal = new bootstrap.Modal(document.getElementById('metricsModal'));
+    });
+    
+    // Gestion du chargement d'image
+    function handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                queryImagePath = data.image_id;
+                queryImage.src = data.image_data;
+                queryImage.style.display = 'block';
+                noImageText.style.display = 'none';
+                
+                // Activer le bouton de recherche si les descripteurs sont chargés
+                if (featuresLoaded) {
+                    searchBtn.disabled = false;
+                }
+            } else {
+                alert('Erreur lors du chargement de l\'image: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors du chargement de l\'image');
+        });
+    }
+    
+    // Gestion du chargement des descripteurs
+    function handleLoadFeatures() {
+        const selectedDescriptors = getSelectedDescriptors();
+        
+        if (selectedDescriptors.length === 0) {
+            alert('Veuillez sélectionner au moins un descripteur');
+            return;
+        }
+        
+        // Simuler le chargement des descripteurs (dans une vraie application, cela pourrait être une requête API)
+        loadingIndicator.style.display = 'block';
+        
+        setTimeout(() => {
+            loadingIndicator.style.display = 'none';
+            featuresLoaded = true;
+            alert('Descripteurs chargés avec succès: ' + selectedDescriptors.join(', '));
+            
+            // Activer le bouton de recherche si une image est chargée
+            if (queryImagePath) {
+                searchBtn.disabled = false;
+            }
+        }, 1000);
+    }
+    
+    // Gestion de la recherche
+    function handleSearch() {
+        const selectedDescriptors = getSelectedDescriptors();
+        
+        if (selectedDescriptors.length === 0) {
+            alert('Veuillez sélectionner au moins un descripteur');
+            return;
+        }
+        
+        if (!queryImagePath) {
+            alert('Veuillez d\'abord charger une image requête');
+            return;
+        }
+        
+        // Afficher l'indicateur de chargement
+        loadingIndicator.style.display = 'block';
+        resultsContainer.innerHTML = '';
+        
+        // Préparer les données pour la requête
+        const searchData = {
+            image_id: queryImagePath,
+            descriptors: selectedDescriptors,
+            distance: document.getElementById('distanceSelect').value,
+            top_k: document.getElementById('displaySelect').value
+        };
+        
+        // Envoyer la requête de recherche
+        fetch('/search', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(searchData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Masquer l'indicateur de chargement
+            loadingIndicator.style.display = 'none';
+            
+            // Stocker les résultats et les métriques
+            searchResults = data.results || [];
+            metricsData = data.metrics || {};
+            
+            // Afficher les résultats
+            displayResults(searchResults);
+            
+            // Activer le bouton des métriques si des métriques sont disponibles
+            metricsBtn.disabled = Object.keys(metricsData).length === 0;
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            loadingIndicator.style.display = 'none';
+            alert('Erreur lors de la recherche');
+        });
+    }
+    
+    // Affichage des résultats
+    function displayResults(results) {
+        resultsContainer.innerHTML = '';
+        
+        if (results.length === 0) {
+            resultsContainer.innerHTML = '<div class="col-12 text-center"><p>Aucun résultat trouvé</p></div>';
+            return;
+        }
+        
+        results.forEach(result => {
+            const resultElement = document.createElement('div');
+            resultElement.className = 'col-md-3 col-sm-6 image-container';
+            
+            resultElement.innerHTML = `
+                <img src="${result.image_url}" class="result-image" alt="Résultat">
+                <div class="image-info">
+                    <p class="mb-0">${getFilenameFromPath(result.path)}</p>
+                    <p class="mb-0">Dist: ${result.distance.toFixed(4)}</p>
+                    <p class="mb-0">Type: ${result.descriptor}</p>
+                </div>
+            `;
+            
+            resultsContainer.appendChild(resultElement);
+        });
+    }
+    
+    // Affichage des métriques
+    function showMetricsModal() {
+        // Remplir le tableau des métriques
+        const metricsTableBody = document.getElementById('metrics-table-body');
+        metricsTableBody.innerHTML = '';
+        
+        const metrics = ['Rappel', 'Précision', 'AP', 'MAP', 'R-Precision'];
+        metrics.forEach(metric => {
+            const row = document.createElement('tr');
+            
+            const nameCell = document.createElement('td');
+            nameCell.textContent = metric;
+            
+            const valueCell = document.createElement('td');
+            const value = metricsData[metric];
+            valueCell.textContent = value !== undefined ? value.toFixed(4) : 'N/A';
+            
+            row.appendChild(nameCell);
+            row.appendChild(valueCell);
+            metricsTableBody.appendChild(row);
+        });
+        
+        // Afficher la courbe précision-rappel
+        if (metricsData.precision_recall_curve) {
+            const ctx = document.getElementById('precision-recall-chart').getContext('2d');
+            
+            // Détruire le graphique précédent s'il existe
+            if (metricsChart) {
+                metricsChart.destroy();
+            }
+            
+            const curve = metricsData.precision_recall_curve;
+            
+            metricsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: curve.recall.map(r => r.toFixed(2)),
+                    datasets: [{
+                        label: 'Précision-Rappel',
+                        data: curve.precision,
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Rappel'
+                            },
+                            min: 0,
+                            max: 1
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Précision'
+                            },
+                            min: 0,
+                            max: 1
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Afficher le modal
+        window.metricsModal.show();
+    }
+    
+    // Fonctions utilitaires
+    function getSelectedDescriptors() {
+        const descriptors = [];
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+        
+        checkboxes.forEach(checkbox => {
+            descriptors.push(checkbox.value);
+        });
+        
+        return descriptors;
+    }
+    
+    function getFilenameFromPath(path) {
+        return path.split('/').pop().split('\\').pop();
+    }
+    
+    // Mettre à jour les options de distance en fonction des descripteurs sélectionnés
+    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', updateDistanceOptions);
+    });
+    
+    function updateDistanceOptions() {
+        const distanceSelect = document.getElementById('distanceSelect');
+        const selectedDescriptors = getSelectedDescriptors();
+        
+        // Sauvegarder la sélection actuelle
+        const currentSelection = distanceSelect.value;
+        
+        // Vider les options
+        distanceSelect.innerHTML = '';
+        
+        // Ajouter les distances communes
+        addOption(distanceSelect, 'Euclidienne');
+        addOption(distanceSelect, 'Manhattan');
+        addOption(distanceSelect, 'Cosinus');
+        
+        // Ajouter des distances spécifiques pour les descripteurs d'histogramme
+        if (selectedDescriptors.includes('BGR') || selectedDescriptors.includes('HSV')) {
+            addOption(distanceSelect, 'Chi carre');
+            addOption(distanceSelect, 'Intersection');
+            addOption(distanceSelect, 'Bhattacharyya');
+            addOption(distanceSelect, 'Correlation');
+        }
+        
+        // Ajouter des distances spécifiques pour ORB et SIFT
+        if (selectedDescriptors.includes('ORB') || selectedDescriptors.includes('SIFT')) {
+            addOption(distanceSelect, 'Brute force');
+            addOption(distanceSelect, 'Flann');
+        }
+        
+        // Restaurer la sélection si possible
+        const index = Array.from(distanceSelect.options).findIndex(option => option.value === currentSelection);
+        if (index >= 0) {
+            distanceSelect.selectedIndex = index;
+        }
+    }
+    
+    function addOption(select, value) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        select.appendChild(option);
+    }
+</script>
+{% endblock %} 

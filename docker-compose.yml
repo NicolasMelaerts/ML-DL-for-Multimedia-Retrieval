@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: SaaS/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - VASARELY_SERVICE_URL=http://vasarely:5002
+      - PYTHONPATH=/app:/opt/DESKTOP_APP
+    depends_on:
+      - vasarely
+    volumes:
+      - ./SaaS:/app
+      - ./DESKTOP_APP:/opt/DESKTOP_APP
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  vasarely:
+    build: ./vasarely_service
+    ports:
+      - "5002:5002"
+    volumes:
+      - ./vasarely_service:/app
+    networks:
+      - app-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+networks:
+  app-network:
+    driver: bridge 

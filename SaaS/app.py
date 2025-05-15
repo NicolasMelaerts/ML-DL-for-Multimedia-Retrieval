@@ -3,12 +3,23 @@
 Application principale Flask
 """
 
-from flask import Flask, render_template, redirect, url_for
+import os
+import sys
+
+# Ajouter le chemin DESKTOP_APP au PYTHONPATH
+desktop_app_path = '/opt/DESKTOP_APP'
+if desktop_app_path not in sys.path:
+    sys.path.append(desktop_app_path)
+
+# Maintenant vous pouvez importer les modules de DESKTOP_APP
+from flask import Flask, render_template, redirect, url_for, request, jsonify, send_from_directory
 from routes.text_search import text_search_bp
 from routes.descriptors import descriptors_bp
 from routes.display import display_bp
 from routes.search import search_bp
 from routes.deep_search import deep_search_bp
+import os
+import requests
 
 app = Flask(__name__)
 
@@ -64,6 +75,54 @@ def deep_search_page():
     Redirection vers la page de recherche par deep learning
     """
     return redirect(url_for('deep_search.index'))
+
+@app.route('/vasarely')
+def vasarely():
+    """
+    Page pour générer des pavages d'hexagones style Vasarely
+    """
+    return render_template('vasarely.html', title="Pavage d'Hexagones Style Vasarely")
+
+@app.route('/api/generate_vasarely', methods=['POST'])
+def generate_vasarely():
+    """
+    API pour générer un pavage d'hexagones style Vasarely
+    """
+    # Récupérer les données JSON de la requête
+    data = request.json
+    
+    # URL du service vasarely
+    vasarely_url = os.environ.get('VASARELY_SERVICE_URL', 'http://vasarely:5002')
+    
+    try:
+        # Ajoutez un timeout plus long pour les requêtes
+        response = requests.post(
+            f"{vasarely_url}/generate", 
+            json=data,
+            timeout=120  # Timeout de 2 minutes
+        )
+        
+        if response.status_code == 200:
+            return jsonify(response.json())
+        else:
+            app.logger.error(f"Erreur du service vasarely: {response.text}")
+            return jsonify({"error": f"Erreur lors de la génération du pavage: {response.text}"}), 500
+    
+    except requests.exceptions.ConnectionError as e:
+        app.logger.error(f"Erreur de connexion au service vasarely: {str(e)}")
+        return jsonify({
+            "error": "Impossible de se connecter au service vasarely. Le service est peut-être indisponible ou surchargé."
+        }), 503
+    
+    except requests.exceptions.Timeout as e:
+        app.logger.error(f"Timeout lors de la connexion au service vasarely: {str(e)}")
+        return jsonify({
+            "error": "Le service vasarely a mis trop de temps à répondre. Veuillez réessayer plus tard."
+        }), 504
+    
+    except Exception as e:
+        app.logger.error(f"Erreur inattendue: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)

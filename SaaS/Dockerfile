@@ -25,11 +25,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY SaaS /opt/SaaS
 
 # Exposer le port Flask
-EXPOSE 5000
+EXPOSE 8080
 
 # Définir les variables d'environnement
 ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
 
-# Commande pour lancer l'application
-CMD ["python", "app.py"]
+# Créer un lien symbolique pour descriptors.py et lancer l'application
+CMD ln -sf /opt/DESKTOP_APP/descriptors.py /opt/SaaS/descriptors.py && python3 app.py

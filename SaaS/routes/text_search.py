@@ -15,11 +15,14 @@ from io import BytesIO
 
 text_search_bp = Blueprint("text_search", __name__)
 
+# Chemin vers le dossier DESKTOP_APP
+DESKTOP_APP_PATH = "/opt/DESKTOP_APP"
+
 # Configuration
-MODEL_PATH = "DESKTOP_APP/Transformer/sentence_transformer_model"
-CAPTIONS_FILE = "DESKTOP_APP/Transformer/captions.json"
-EMBEDDINGS_DIR = "DESKTOP_APP/Transformer/embeddings_output"
-DATASETS_DIR = "DESKTOP_APP/MIR_DATASETS_B"
+MODEL_PATH = os.path.join(DESKTOP_APP_PATH, "Transformer/sentence_transformer_model")
+CAPTIONS_FILE = os.path.join(DESKTOP_APP_PATH, "Transformer/captions.json")
+EMBEDDINGS_DIR = os.path.join(DESKTOP_APP_PATH, "Transformer/embeddings_output")
+DATASETS_DIR = os.path.join(DESKTOP_APP_PATH, "MIR_DATASETS_B")
 
 animaux = ["araignee", "chiens", "oiseaux", "poissons", "singes"]
 araignees = ["barn spider", "garden spider", "orb-weaving spider", "tarantula", "trap_door spider", "wolf spider"]

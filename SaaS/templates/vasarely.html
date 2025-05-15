@@ -1,0 +1,529 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid vasarely-container">
+    <h1 class="mt-4 mb-4 text-center vasarely-title">Pavage d'Hexagones Style Vasarely</h1>
+    
+    <div class="card mb-4 vasarely-card">
+        <div class="card-body">
+            <h5 class="card-title">Paramètres du Pavage</h5>
+            <form id="pavageForm" class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="color1">Couleur 1</label>
+                        <select class="form-control" id="color1" name="color1">
+                            <option value="lime">Lime</option>
+                            <option value="red">Rouge</option>
+                            <option value="blue">Bleu</option>
+                            <option value="green">Vert</option>
+                            <option value="yellow">Jaune</option>
+                            <option value="purple">Violet</option>
+                            <option value="orange">Orange</option>
+                            <option value="pink">Rose</option>
+                            <option value="cyan">Cyan</option>
+                            <option value="black">Noir</option>
+                            <option value="white">Blanc</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="color2">Couleur 2</label>
+                        <select class="form-control" id="color2" name="color2">
+                            <option value="black">Noir</option>
+                            <option value="red">Rouge</option>
+                            <option value="blue">Bleu</option>
+                            <option value="green">Vert</option>
+                            <option value="yellow">Jaune</option>
+                            <option value="purple">Violet</option>
+                            <option value="orange">Orange</option>
+                            <option value="pink">Rose</option>
+                            <option value="cyan">Cyan</option>
+                            <option value="lime">Lime</option>
+                            <option value="white">Blanc</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="color3">Couleur 3</label>
+                        <select class="form-control" id="color3" name="color3">
+                            <option value="blue">Bleu</option>
+                            <option value="red">Rouge</option>
+                            <option value="green">Vert</option>
+                            <option value="yellow">Jaune</option>
+                            <option value="purple">Violet</option>
+                            <option value="orange">Orange</option>
+                            <option value="pink">Rose</option>
+                            <option value="cyan">Cyan</option>
+                            <option value="lime">Lime</option>
+                            <option value="black">Noir</option>
+                            <option value="white">Blanc</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="rayon">Rayon de déformation</label>
+                        <input type="range" class="form-control-range" id="rayon" name="rayon" min="100" max="500" value="300">
+                        <div class="text-center" id="rayonValue">300</div>
+                    </div>
+                </div>
+                <div class="col-12 mt-3">
+                    <button type="submit" class="btn btn-primary w-100 generate-btn">Générer le Pavage</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card vasarely-card">
+        <div class="card-body">
+            <h5 class="card-title">Résultat</h5>
+            <div id="result" class="pavage-container">
+                <div class="initial-message">
+                    <div class="hexagon-grid">
+                        <div class="hex-row">
+                            <div class="hex" style="background-color: lime;"></div>
+                            <div class="hex" style="background-color: black;"></div>
+                            <div class="hex" style="background-color: blue;"></div>
+                        </div>
+                        <div class="hex-row hex-offset">
+                            <div class="hex" style="background-color: blue;"></div>
+                            <div class="hex" style="background-color: lime;"></div>
+                        </div>
+                        <div class="hex-row">
+                            <div class="hex" style="background-color: blue;"></div>
+                            <div class="hex" style="background-color: black;"></div>
+                            <div class="hex" style="background-color: lime;"></div>
+                        </div>
+                    </div>
+                    <p>Sélectionnez vos couleurs et cliquez sur "Générer" pour créer un pavage d'hexagones</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Afficher la valeur du slider
+document.getElementById('rayon').addEventListener('input', function() {
+    document.getElementById('rayonValue').textContent = this.value;
+});
+
+document.getElementById('pavageForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Récupérer les paramètres du formulaire
+    const color1 = document.getElementById('color1').value;
+    const color2 = document.getElementById('color2').value;
+    const color3 = document.getElementById('color3').value;
+    const rayon = document.getElementById('rayon').value;
+    
+    // Valeurs fixes pour les autres paramètres
+    const inf_gauche = -305;
+    const sup_droit = 305;
+    const longueur = 50;
+    const centre_x = -50;
+    const centre_y = -50;
+    const centre_z = 0;
+    
+    // Enregistrer l'heure de début
+    const startTime = Date.now();
+    const minDisplayTime = 5000; // 5 secondes minimum
+    
+    // Afficher un message de chargement avec animation stylée
+    document.getElementById('result').innerHTML = `
+        <div class="loading-container">
+            <div class="hexagon-pattern">
+                <div class="hex-row">
+                    <div class="pattern-hex" style="background-color: ${color1};"></div>
+                    <div class="pattern-hex" style="background-color: ${color2};"></div>
+                    <div class="pattern-hex" style="background-color: ${color3};"></div>
+                </div>
+                <div class="hex-row hex-offset">
+                    <div class="pattern-hex" style="background-color: ${color2};"></div>
+                    <div class="pattern-hex" style="background-color: ${color3};"></div>
+                    <div class="pattern-hex" style="background-color: ${color1};"></div>
+                </div>
+                <div class="hex-row">
+                    <div class="pattern-hex" style="background-color: ${color3};"></div>
+                    <div class="pattern-hex" style="background-color: ${color1};"></div>
+                    <div class="pattern-hex" style="background-color: ${color2};"></div>
+                </div>
+            </div>
+            <div class="hexagon-loader">
+                <div class="hexagon hex1" style="background-color: ${color1};"></div>
+                <div class="hexagon hex2" style="background-color: ${color2};"></div>
+                <div class="hexagon hex3" style="background-color: ${color3};"></div>
+            </div>
+            <p class="loading-text">Génération du pavage en cours...</p>
+            <div class="progress">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+            </div>
+        </div>
+    `;
+    
+    // Animation de la barre de progression
+    let progress = 0;
+    const progressBar = document.querySelector('.progress-bar');
+    const progressInterval = setInterval(() => {
+        progress += 1;
+        progressBar.style.width = `${progress}%`;
+        if (progress >= 100) {
+            clearInterval(progressInterval);
+        }
+    }, 50); // 5000ms / 100 = 50ms par 1%
+    
+    // Envoyer la requête au serveur
+    fetch('/api/generate_vasarely', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            inf_gauche: inf_gauche,
+            sup_droit: sup_droit,
+            longueur: longueur,
+            color1: color1,
+            color2: color2,
+            color3: color3,
+            centre_x: centre_x,
+            centre_y: centre_y,
+            centre_z: centre_z,
+            rayon: rayon
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Fonction pour afficher le résultat
+        const displayResult = () => {
+            if (data.image_url) {
+                // Créer un élément image
+                const img = new Image();
+                img.onload = function() {
+                    // Une fois l'image chargée, l'afficher avec une transition
+                    document.getElementById('result').innerHTML = '';
+                    img.style.opacity = 0;
+                    document.getElementById('result').appendChild(img);
+                    setTimeout(() => {
+                        img.style.opacity = 1;
+                    }, 100);
+                };
+                img.src = data.image_url;
+                img.alt = "Pavage d'hexagones";
+                img.className = "img-fluid pavage-image";
+            } else if (data.error) {
+                document.getElementById('result').innerHTML = `
+                    <div class="alert alert-danger">${data.error}</div>
+                `;
+            }
+            clearInterval(progressInterval);
+        };
+        
+        const elapsedTime = Date.now() - startTime;
+        if (elapsedTime < minDisplayTime) {
+            // Si moins de 5 secondes se sont écoulées, attendre avant d'afficher le résultat
+            setTimeout(displayResult, minDisplayTime - elapsedTime);
+        } else {
+            // Sinon, afficher immédiatement
+            displayResult();
+        }
+    })
+    .catch(error => {
+        // Assurer que l'animation dure au moins 5 secondes
+        setTimeout(() => {
+            document.getElementById('result').innerHTML = `
+                <div class="alert alert-danger">Erreur: ${error}</div>
+            `;
+        }, 5000);
+    });
+});
+</script>
+
+<style>
+/* Styles généraux de la page */
+.vasarely-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.vasarely-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    color: #333;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 30px;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+}
+
+.vasarely-card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+    transition: all 0.3s ease;
+}
+
+.vasarely-card:hover {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.card-title {
+    font-weight: 600;
+    color: #444;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* Styles pour les contrôles de formulaire */
+.form-group label {
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+/* Correction pour les select box */
+.form-control {
+    height: auto;
+    padding: 8px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.form-control-range {
+    width: 100%;
+}
+
+#rayonValue {
+    font-weight: bold;
+    color: #007bff;
+    margin-top: 8px;
+}
+
+.generate-btn {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    border: none;
+    border-radius: 30px;
+    padding: 12px 25px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(0,123,255,0.3);
+    transition: all 0.3s ease;
+}
+
+.generate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,123,255,0.4);
+}
+
+.generate-btn:active {
+    transform: translateY(1px);
+}
+
+/* Styles pour le conteneur de pavage */
+.pavage-container {
+    width: 100%;
+    min-height: 600px;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+    transition: all 0.3s ease;
+}
+
+.pavage-image {
+    max-width: 60%; /* Réduire la taille de l'image à 60% */
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transition: opacity 0.5s ease;
+}
+
+/* Message initial avec grille d'hexagones */
+.initial-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #666;
+}
+
+.hexagon-grid {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.hex-row {
+    display: flex;
+}
+
+.hex-offset {
+    margin-left: 25px;
+}
+
+.hex {
+    width: 50px;
+    height: 30px;
+    margin: 2px;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    transition: all 0.3s ease;
+}
+
+.hex:hover {
+    transform: scale(1.1);
+}
+
+/* Styles pour l'animation de chargement */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+}
+
+.hexagon-pattern {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 30px;
+    opacity: 0.3;
+}
+
+.pattern-hex {
+    width: 40px;
+    height: 23px;
+    margin: 2px;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    animation: patternFade 3s infinite alternate;
+}
+
+.hexagon-loader {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 30px 0;
+}
+
+.hexagon {
+    position: absolute;
+    width: 60px;
+    height: 35px;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    opacity: 0.8;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    animation: pulse 1.5s infinite alternate;
+}
+
+.hex1 {
+    top: 20px;
+    left: 45px;
+    animation-delay: 0s;
+}
+
+.hex2 {
+    top: 70px;
+    left: 85px;
+    animation-delay: 0.5s;
+}
+
+.hex3 {
+    top: 70px;
+    left: 5px;
+    animation-delay: 1s;
+}
+
+.loading-text {
+    font-size: 18px;
+    color: #333;
+    margin: 20px 0;
+    text-align: center;
+    animation: fadeInOut 1.5s infinite alternate;
+    font-weight: 500;
+}
+
+.progress {
+    width: 80%;
+    height: 10px;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 20px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, #007bff, #00c6ff);
+    transition: width 0.1s linear;
+}
+
+/* Animations */
+@keyframes pulse {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.6;
+    }
+    100% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes patternFade {
+    0% {
+        opacity: 0.2;
+    }
+    100% {
+        opacity: 0.6;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .vasarely-title {
+        font-size: 1.8rem;
+    }
+    
+    .pavage-container {
+        min-height: 400px;
+    }
+    
+    .hexagon-loader {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .hexagon {
+        width: 50px;
+        height: 30px;
+    }
+    
+    .pavage-image {
+        max-width: 90%; /* Plus grand sur mobile pour la lisibilité */
+    }
+}
+</style>
+{% endblock %} 

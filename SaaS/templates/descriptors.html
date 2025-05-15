@@ -3,22 +3,6 @@
 {% block content %}
 <div class="container mt-4">
     <h1 class="mb-4 text-center">{{ title }}</h1>
-    
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="log-container">
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category if category != 'info' else 'primary' }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
-    
     <div class="card mb-4">
         <div class="card-header">
             <h5>Statut de la base de données</h5>
@@ -37,7 +21,8 @@
     <form method="post">
         <div class="form-group">
             <label for="dataset_dir">Dossier des images:</label>
-            <input type="text" class="form-control" id="dataset_dir" name="dataset_dir" value="DESKTOP_APP/MIR_DATASETS_B">
+            <input type="text" class="form-control" id="dataset_dir" name="dataset_dir" value="/opt/DESKTOP_APP/MIR_DATASETS_B" readonly>
+            <small class="form-text text-muted">Ce chemin est configuré par le système et ne peut pas être modifié.</small>
         </div>
         
         <div class="card mb-4">

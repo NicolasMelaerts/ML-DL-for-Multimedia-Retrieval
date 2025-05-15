@@ -5,7 +5,7 @@ import base64
 display_bp = Blueprint('display', __name__)
 
 # Chemin vers le dossier contenant les images
-DATASETS_DIR = "DESKTOP_APP/MIR_DATASETS_B"
+DATASETS_DIR = "/opt/DESKTOP_APP/MIR_DATASETS_B"
 
 # Listes des animaux et races
 animaux = ["araignee", "chiens", "oiseaux", "poissons", "singes"]

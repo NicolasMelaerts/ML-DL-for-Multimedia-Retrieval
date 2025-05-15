@@ -8,8 +8,20 @@ import time
 import json
 import glob
 
+# Chemin vers le dossier DESKTOP_APP
+DESKTOP_APP_PATH = "/opt/DESKTOP_APP"
+sys.path.append(DESKTOP_APP_PATH)
+
+# Dossier contenant la base d'images
+IMAGE_FOLDER = os.path.join(DESKTOP_APP_PATH, "MIR_DATASETS_B")
+
+# Dossier pour les fichiers temporaires
+TEMP_FOLDER = os.path.join(DESKTOP_APP_PATH, "temp")
+
+# Dossier contenant les features
+FEATURES_FOLDER = os.path.join(DESKTOP_APP_PATH, "Features")
+
 # Importer les fonctions nécessaires
-sys.path.append('DESKTOP_APP')
 from distances import getkVoisins_deep
 
 deep_search_bp = Blueprint('deep_search', __name__)
@@ -22,9 +34,6 @@ MODELS = {
     'ViT': 'Vision Transformer (ViT)',
     'VGG': 'VGG'
 }
-
-# Dossier contenant la base d'images
-IMAGE_FOLDER = "DESKTOP_APP/MIR_DATASETS_B"
 
 @deep_search_bp.route('/', methods=['GET', 'POST'])
 def index():
@@ -57,7 +66,12 @@ def index():
             query_file = request.files['query_image']
             if query_file.filename != '':
                 # Sauvegarder temporairement l'image
-                temp_path = os.path.join('DESKTOP_APP', 'temp_query.jpg')
+                temp_path = os.path.join(TEMP_FOLDER, 'temp_query.jpg')
+                
+                # Créer le dossier temporaire s'il n'existe pas
+                if not os.path.exists(TEMP_FOLDER):
+                    os.makedirs(TEMP_FOLDER)
+                
                 query_file.save(temp_path)
                 
                 # Extraire le nom de base de l'image (sans extension)
@@ -169,7 +183,7 @@ def load_features_with_images(model_name, image_folder):
     Returns:
         Tuple (features_dict, image_dict) contenant les features et les chemins des images
     """
-    feature_folder = os.path.join('DESKTOP_APP', 'Features', model_name)
+    feature_folder = os.path.join(FEATURES_FOLDER, model_name)
     feature_files = sorted(glob.glob(os.path.join(feature_folder, "*.txt")))
     features_dict = {}
     image_dict = {}
