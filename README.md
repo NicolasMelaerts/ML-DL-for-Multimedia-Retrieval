@@ -92,70 +92,33 @@ docker run -it --rm \
 
 ## 🌐 Lancement du service web (SaaS)
 
-### 1. Construire l'image Docker
+### En local : 
 
 ```bash
-docker build -t flaskapp_v1 -f SaaS/Dockerfile .
+./deploy_local.sh
 ```
 
-### 2. Exécuter le conteneur
-
-#### En local
-```bash
-docker run -d \                                 
-  --name flask_app \
-  -v "$(pwd)":/opt/TP \
-  -w /opt/TP \
-  -p 8080:8080 \
-  flaskapp_v1 \
-  python3 SaaS/app.py
-```
-
-### 3. Accéder à l'application
+### Adress web : 
 
 ```
-http://127.0.0.1:8080 # En local
+http://localhost
 ```
 
-### 4. Redémarrer le conteneur (si nécessaire)
+
+### Sur le serveur :
 
 ```bash
-docker restart flaskapp
+./deploy_server.sh
 ```
 
-### 5. Voir les logs
+### Adress web : 
 
-```bash
-docker logs flaskapp
+```
+http://163.172.234.110
 ```
 
----
-
-## 🧹 Nettoyage (optionnel)
-
-Pour supprimer les conteneurs :
-
-```bash
-docker rm flaskapp
-```
-
-Pour supprimer les images Docker :
-
-```bash
-docker image rm desktop_app_image flaskapp_v1
-```
-
-Pour nettoyer les ressources inutilisées :
+### Pour nettoyer les ressources inutilisées :
 
 ```bash
 docker system prune
 ```
-
----
-
-## 🚀 Lancement du service web (SaaS) avec docker compose
-
-```bash
-./run_compose.sh
-```
-
