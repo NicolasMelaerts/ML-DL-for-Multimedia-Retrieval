@@ -177,6 +177,8 @@ class TextSearchPage(QtWidgets.QWidget):
         
         # Bouton de retour
         self.backButton = QtWidgets.QPushButton("Retour à l'accueil")
+        self.backButton.setMinimumHeight(40)
+        self.backButton.setProperty("class", "home-button")
         self.mainLayout.addWidget(self.backButton)
         
         # Connecter les signaux

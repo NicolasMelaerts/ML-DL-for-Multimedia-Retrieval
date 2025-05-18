@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.ipynb
+*.log
+*.tmp
+*.npy
+*.npz
+.DS_Store
+.vscode/
+.idea/
+*.git
+*.md
+*.pdf
+data/
+notebooks/

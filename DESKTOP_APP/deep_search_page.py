@@ -142,12 +142,10 @@ class DeepSearchPage(QtWidgets.QWidget):
         self.progressBar.setValue(0)
         self.mainLayout.addWidget(self.progressBar)
         
-        # Bouton Retour en bas de la page
+        # Bouton retour
         self.backButton = QtWidgets.QPushButton("Retour à l'accueil")
         self.backButton.setMinimumHeight(40)
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        self.backButton.setFont(font)
+        self.backButton.setProperty("class", "home-button")
         self.mainLayout.addWidget(self.backButton)
         
         # Connecter les signaux

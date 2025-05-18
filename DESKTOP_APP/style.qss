@@ -387,22 +387,24 @@ QMenu::item:selected {
     background-color: #219653;
 }
 
-/* Style pour le bouton de retour */
-#DisplayPage QPushButton[text="Retour à l'accueil"] {
+/* Style pour les boutons de retour à l'accueil avec classe */
+QPushButton.home-button {
     background-color: #e74c3c;
     color: white;
     border: none;
     border-radius: 5px;
     padding: 10px;
     font-weight: bold;
+    min-height: 40px;
+    font-size: 12px;
 }
 
-#DisplayPage QPushButton[text="Retour à l'accueil"]:hover {
-    background-color: #f44336;
-}
-
-#DisplayPage QPushButton[text="Retour à l'accueil"]:pressed {
+QPushButton.home-button:hover {
     background-color: #c0392b;
+}
+
+QPushButton.home-button:pressed {
+    background-color: #a93226;
 }
 
 /* Style pour le titre */
@@ -482,23 +484,6 @@ QMenu::item:selected {
     background-color: rgba(200, 255, 200, 150);
 }
 
-#DescriptorsPage QPushButton {
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 10px;
-    font-weight: bold;
-    min-height: 40px;
-}
-
-#DescriptorsPage QPushButton:hover {
-    background-color: #2980b9;
-}
-
-#DescriptorsPage QPushButton:pressed {
-    background-color: #1c6ea4;
-}
 
 #DescriptorsPage QPushButton[objectName="charger"] {
     background-color: #27ae60;
@@ -510,18 +495,6 @@ QMenu::item:selected {
 
 #DescriptorsPage QPushButton[objectName="charger"]:pressed {
     background-color: #219653;
-}
-
-#DescriptorsPage QPushButton[objectName="backButton"] {
-    background-color: #e74c3c;
-}
-
-#DescriptorsPage QPushButton[objectName="backButton"]:hover {
-    background-color: #f44336;
-}
-
-#DescriptorsPage QPushButton[objectName="backButton"]:pressed {
-    background-color: #c0392b;
 }
 
 #DescriptorsPage QFrame {
@@ -597,42 +570,6 @@ QMenu::item:selected {
     padding: 10px;
     background-color: rgba(255, 255, 255, 120);
     border-radius: 10px;
-}
-
-#SearchPage QPushButton, 
-#TextSearchPage QPushButton {
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 10px;
-    font-weight: bold;
-    min-height: 40px;
-}
-
-#SearchPage QPushButton:hover, 
-#TextSearchPage QPushButton:hover {
-    background-color: #2980b9;
-}
-
-#SearchPage QPushButton:pressed, 
-#TextSearchPage QPushButton:pressed {
-    background-color: #1c6ea4;
-}
-
-#SearchPage QPushButton[objectName="backButton"], 
-#TextSearchPage QPushButton[objectName="backButton"] {
-    background-color: #e74c3c;
-}
-
-#SearchPage QPushButton[objectName="backButton"]:hover, 
-#TextSearchPage QPushButton[objectName="backButton"]:hover {
-    background-color: #f44336;
-}
-
-#SearchPage QPushButton[objectName="backButton"]:pressed, 
-#TextSearchPage QPushButton[objectName="backButton"]:pressed {
-    background-color: #c0392b;
 }
 
 #SearchPage QFrame, 
