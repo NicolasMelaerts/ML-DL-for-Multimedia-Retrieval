@@ -7,7 +7,7 @@ QWidget {
 
 /* Style des boutons */
 QPushButton {
-    border: none;
+    border: 1px solid #111111;
     padding: 3px 8px;  /* Réduit le padding vertical et horizontal */
     border-radius: 4px;
     font-weight: bold;
@@ -41,61 +41,7 @@ QLineEdit, QTextEdit {
 QLineEdit:focus, QTextEdit:focus {
     border: 1px solid #3498db;
 }
-/* Style des menus déroulants */
-QComboBox {
-    border: 1px solid #cccccc;
-    border-radius: 4px;
-    padding: 2px 5px;
-    background-color: white;
-    min-height: 24px;
-    color: #01579b;  /* Texte bleu foncé */
-}
 
-QComboBox:hover {
-    border: 1px solid #3498db;
-    background-color: #f0f6fc;
-}
-
-QComboBox::drop-down {
-    subcontrol-origin: padding;
-    subcontrol-position: top right;
-    width: 20px;
-    border-left: 1px solid #3498db;  /* Bordure bleue */
-    border-top-right-radius: 3px;
-    border-bottom-right-radius: 3px;
-    background-color: #81d4fa;  /* Fond bleu pour la flèche */
-}
-
-QComboBox::down-arrow {
-    image: url(down_arrow.png);
-    width: 12px;
-    height: 12px;
-}
-
-/* Style pour la liste déroulante */
-QComboBox QAbstractItemView {
-    border: 2px solidrgb(0, 47, 255);
-    selection-background-color:rgb(0, 8, 255);
-    selection-color: white;
-    background-color: #e1f5fe;  /* Fond très légèrement bleu */
-}
-
-/* Style pour les éléments de la liste */
-QComboBox QAbstractItemView::item {
-    background-color:rgb(255, 255, 255);  /* Fond bleu clair pour tous les éléments */
-    color:rgb(0, 66, 153);  /* Texte bleu foncé */
-    padding: 5px;
-}
-
-QComboBox QAbstractItemView::item:hover {
-    background-color:rgb(136, 186, 255);  /* Fond bleu moyen au survol */
-    color: white;
-}
-
-QComboBox QAbstractItemView::item:selected {
-    background-color:rgb(0, 145, 255);  /* Fond bleu vif pour l'élément sélectionné */
-    color: white;
-}
 /* Style des checkboxes */
 QCheckBox {
     spacing: 5px;
@@ -646,7 +592,7 @@ QPushButton[text="..."] {
     min-height: 32px;
     font-size: 13px;
     font-weight: bold;
-    background-color: #28a745;
+    background-color: #17a2b8;
 }
 
 /* Style pour les résultats d'image */
@@ -668,6 +614,7 @@ QPushButton[text="..."] {
     font-size: 11px;
     padding: 2px;
     margin: 0;
+    color: #000000 !important;  /* Forcé en noir */
 }
 
 /* Réduire l'espacement entre les widgets dans le layout principal */
@@ -680,6 +627,7 @@ QPushButton[text="..."] {
     font-size: 18px;
     padding: 5px;
     margin-bottom: 0;
+    color: #000000 !important;  /* Forcé en noir */
 }
 
 /* Réduire la taille des groupbox Distance et Affichage */
@@ -701,7 +649,7 @@ QPushButton[text="..."] {
 QPushButton[text="Voir les métriques"] {
     background-color: #9b59b6;
     color: white;
-    border: none;
+    border: 1px solid #111111;
     border-radius: 5px;
     padding: 8px 16px;
     font-weight: bold;
@@ -720,6 +668,7 @@ QPushButton[text="Voir les métriques"]:pressed {
 QPushButton[text="Voir les métriques"]:disabled {
     background-color: #d2b4de;
     color: #ecf0f1;
+    border: 1px solid #111111;
 }
 
 /* Styles pour les boutons selon les couleurs des pages */
@@ -728,7 +677,7 @@ QPushButton[text="Voir les métriques"]:disabled {
 QPushButton[objectName="displayButton"] {
     background-color: #3498db;
     color: white;
-    border: none;
+    border: 1px solid #111111;
     border-radius: 5px;
     padding: 8px 16px;
     font-weight: bold;
@@ -746,7 +695,7 @@ QPushButton[objectName="displayButton"]:pressed {
 QPushButton[objectName="descriptorsButton"] {
     background-color: #6c757d;
     color: white;
-    border: none;
+    border: 1px solid #111111;
     border-radius: 5px;
     padding: 8px 16px;
     font-weight: bold;
@@ -764,7 +713,7 @@ QPushButton[objectName="descriptorsButton"]:pressed {
 QPushButton[objectName="searchButton"] {
     background-color: #28a745;
     color: white;
-    border: none;
+    border: 1px solid #111111;
     border-radius: 5px;
     padding: 8px 16px;
     font-weight: bold;
@@ -782,7 +731,7 @@ QPushButton[objectName="searchButton"]:pressed {
 QPushButton[objectName="textSearchButton"] {
     background-color: #17a2b8;
     color: white;
-    border: none;
+    border: 1px solid #111111;
     border-radius: 5px;
     padding: 8px 16px;
     font-weight: bold;
@@ -800,7 +749,7 @@ QPushButton[objectName="textSearchButton"]:pressed {
 QPushButton[objectName="deepSearchButton"] {
     background-color: #ffc107;
     color: white;
-    border: none;
+    border: 1px solid #111111;
     border-radius: 5px;
     padding: 8px 16px;
     font-weight: bold;
@@ -818,7 +767,7 @@ QPushButton[objectName="deepSearchButton"]:pressed {
 QPushButton[text="Retour à l'accueil"] {
     background-color: #343a40;
     color: white;
-    border: none;
+    border: 1px solid #111111;
     border-radius: 5px;
     padding: 8px 16px;
     font-weight: bold;
@@ -887,16 +836,91 @@ QWidget#SearchPage QLabel[objectName="titleLabel"] {
 
 /* Page de recherche par texte - thème bleu clair */
 QWidget#TextSearchPage {
-    background-color: #f0f8fa;
+    background-color: #f9f9f9;  /* Fond gris clair standard */
 }
 
+/* Tous les textes en noir */
+QWidget#TextSearchPage QLabel,
+QWidget#TextSearchPage QGroupBox,
+QWidget#TextSearchPage QGroupBox::title,
+QWidget#TextSearchPage QCheckBox,
+QWidget#TextSearchPage QRadioButton,
+QWidget#TextSearchPage QComboBox,
+QWidget#TextSearchPage QTabBar::tab,
+QWidget#TextSearchPage QMenu::item {
+    color: #000000;  /* Noir */
+    border-color: #cccccc;  /* Gris standard pour les bordures */
+}
+
+/* GroupBox standards */
 QWidget#TextSearchPage QGroupBox {
-    border-color: #b6e3ea;
+    border: 1px solid #cccccc;
+    border-radius: 8px;
+    margin-top: 1ex;
+    padding: 10px;
+    background-color: white;
 }
 
-QWidget#TextSearchPage QLabel[objectName="titleLabel"] {
-    color: #17a2b8;
+QWidget#TextSearchPage QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top center;
+    padding: 0 5px;
+    background-color: white;
+    color: #000000;  /* Noir */
+}
+
+/* Widgets interactifs */
+QWidget#TextSearchPage QLineEdit,
+QWidget#TextSearchPage QTextEdit,
+QWidget#TextSearchPage QPlainTextEdit,
+QWidget#TextSearchPage QComboBox,
+QWidget#TextSearchPage QSpinBox,
+QWidget#TextSearchPage QDoubleSpinBox {
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    background-color: white;
+    color: #000000;  /* Noir */
+}
+
+/* Boutons standards */
+QWidget#TextSearchPage QPushButton:not([text="Retour à l'accueil"]) {
+    background-color: #e0e0e0;  /* Gris clair */
+    color: #000000;  /* Noir */
+    border: 1px solid #111111;
+    border-radius: 5px;
+    padding: 8px 16px;
     font-weight: bold;
+}
+
+QWidget#TextSearchPage QPushButton:not([text="Retour à l'accueil"]):hover {
+    background-color: #c0c0c0;  /* Gris moyen */
+}
+
+QWidget#TextSearchPage QPushButton:not([text="Retour à l'accueil"]):pressed {
+    background-color: #a0a0a0;  /* Gris foncé */
+}
+
+/* Conserver le bouton de retour cohérent avec les autres pages */
+QWidget#TextSearchPage QPushButton[text="Retour à l'accueil"] {
+    background-color: #343a40;  /* Gris foncé */
+    color: white;
+    border: 1px solid #111111;
+    min-height: 40px;
+}
+
+QWidget#TextSearchPage QPushButton[text="Retour à l'accueil"]:hover {
+    background-color: #23272b;
+}
+
+QWidget#TextSearchPage QPushButton[text="Retour à l'accueil"]:pressed {
+    background-color: #1d2124;
+}
+
+/* Petit bouton de navigation */
+QWidget#TextSearchPage QPushButton[text="..."] {
+    background-color: #e0e0e0;  /* Gris clair */
+    color: #000000;  /* Noir */
+    border: 1px solid #111111;
 }
 
 /* Page de recherche deep learning - thème jaune */
@@ -918,4 +942,207 @@ QWidget#DeepSearchPage QLabel[objectName="titleLabel"] {
     background-color: white;
     border-radius: 8px;
     border: 1px solid #e0e0e0;
+}
+
+/* Ajout d'un contour noir léger pour les boutons des cartes */
+#FeatureCard QPushButton {
+    border: 1px solid #111111;
+}
+
+/* Pour les labels moins importants ou descriptifs, une nuance plus légère */
+QWidget#TextSearchPage QLabel[objectName="descriptionLabel"] {
+    color: #4baebb;  /* Bleu ciel légèrement plus clair */
+}
+
+/* Pour les labels de statut ou d'information */
+QWidget#TextSearchPage QLabel[objectName="statusLabel"] {
+    color: #333333;  /* Gris foncé pour meilleure lisibilité */
+    font-style: italic;
+}
+
+/* SURCHARGE POUR LES WIDGETS DANS LES LAYOUTS DE TEXTSEARCHPAGE */
+
+/* Widgets dans les layouts horizontaux et verticaux */
+QWidget#TextSearchPage QWidget {
+    background-color: transparent !important;
+}
+
+/* Tous les QFrame dans TextSearchPage */
+QWidget#TextSearchPage QFrame {
+    background-color: transparent !important;
+    border-color: #17a2b8 !important;
+}
+
+/* Labels dans les layouts */
+QWidget#TextSearchPage QHBoxLayout > QLabel,
+QWidget#TextSearchPage QVBoxLayout > QLabel,
+QWidget#TextSearchPage QGridLayout > QLabel {
+    color: #17a2b8 !important;
+}
+
+/* Widgets personnalisés dans les layouts */
+QWidget#TextSearchPage QHBoxLayout > * > QLabel,
+QWidget#TextSearchPage QVBoxLayout > * > QLabel,
+QWidget#TextSearchPage QGridLayout > * > QLabel {
+    color: #17a2b8 !important;
+}
+
+/* Widgets de formulaire dans les layouts */
+QWidget#TextSearchPage QLabel,
+QWidget#TextSearchPage QRadioButton,
+QWidget#TextSearchPage QCheckBox,
+QWidget#TextSearchPage QComboBox,
+QWidget#TextSearchPage QSpinBox,
+QWidget#TextSearchPage QDoubleSpinBox {
+    color: #17a2b8 !important;
+}
+
+QWidget#TextSearchPage QRadioButton::indicator,
+QWidget#TextSearchPage QCheckBox::indicator {
+    border-color: #17a2b8 !important;
+}
+
+/* Style pour les widgets de fond */
+QWidget#TextSearchPage QScrollArea > QWidget,
+QWidget#TextSearchPage QGroupBox > QWidget {
+    background-color: transparent !important;
+}
+
+/* Style pour les conteneurs et panneaux */
+QWidget#TextSearchPage QGroupBox,
+QWidget#TextSearchPage QTabWidget,
+QWidget#TextSearchPage QTabWidget::pane,
+QWidget#TextSearchPage QTabBar::tab:selected {
+    border-color: #17a2b8 !important;
+    color: #17a2b8 !important;
+}
+
+QWidget#TextSearchPage QTabBar::tab:selected {
+    background-color: #e6f7f9 !important;
+}
+
+/* CORRECTION SPÉCIFIQUE POUR LES LABELS DANS LES LAYOUTS */
+
+/* Ciblage très spécifique des labels dans TextSearchPage */
+QWidget#TextSearchPage QLabel {
+    color: #17a2b8 !important;  /* Bleu ciel */
+}
+
+/* Labels dans les layouts horizontaux */
+QWidget#TextSearchPage QHBoxLayout * QLabel {
+    color: #17a2b8 !important;
+}
+
+/* Labels "JSON:", "Modèle:", etc. */
+QWidget#TextSearchPage QLabel[text="JSON:"],
+QWidget#TextSearchPage QLabel[text="Modèle:"],
+QWidget#TextSearchPage QLabel[text="Embeddings:"],
+QWidget#TextSearchPage QLabel[text="Nombre de résultats:"],
+QWidget#TextSearchPage QLabel[text="Description textuelle:"] {
+    color: #17a2b8 !important;
+    font-weight: bold !important;
+}
+
+/* Pour être absolument certain, utilisons l'objectName */
+QWidget#TextSearchPage #jsonLabel,
+QWidget#TextSearchPage #modelLabel,
+QWidget#TextSearchPage #embeddingsLabel,
+QWidget#TextSearchPage #resultsLabel {
+    color: #17a2b8 !important;
+    font-weight: bold !important;
+}
+
+/* Style direct pour tous les widgets de la page */
+QWidget#TextSearchPage * {
+    color: #17a2b8 !important;
+}
+
+/* Exception pour les zones de texte et boutons */
+QWidget#TextSearchPage QLineEdit,
+QWidget#TextSearchPage QTextEdit,
+QWidget#TextSearchPage QPlainTextEdit {
+    color: #333333 !important;  /* Texte noir pour les champs de saisie */
+}
+
+QWidget#TextSearchPage QPushButton {
+    color: white !important;  /* Texte blanc pour les boutons */
+}
+
+QWidget#TextSearchPage QPushButton[text="..."]:not([disabled]) {
+    color: #17a2b8 !important;  /* Couleur du texte pour les petits boutons */
+    background-color: white !important;
+    border-color: #17a2b8 !important;
+}
+
+/* CIBLAGE SPÉCIFIQUE DES ÉLÉMENTS DE RÉSULTATS */
+
+/* Style spécifique pour le groupbox des résultats */
+#TextSearchPage QGroupBox[title="Résultats"] {
+    background-color: rgba(255, 255, 255, 180);
+    border: 2px solid #cccccc;
+    border-radius: 8px;
+    padding: 5px;
+    margin-top: 5px;
+}
+
+/* Style pour les résultats d'image */
+#TextSearchPage QScrollArea {
+    background-color: transparent;
+    border: none;
+}
+
+#TextSearchPage QScrollArea QWidget {
+    background-color: transparent;
+}
+
+/* Style pour chaque résultat individuel */
+#TextSearchPage QLabel[text^="<b>Chemin:</b>"],
+#TextSearchPage QLabel[text^="<b>Description:</b>"],
+#TextSearchPage QLabel[text^="<b>Score de similarité:</b>"],
+#TextSearchPage QLabel[text^="<b>Animal:</b>"],
+#TextSearchPage QLabel[text^="<b>Race:</b>"] {
+    font-size: 11px;
+    padding: 2px;
+    margin: 0;
+    color: #000000 !important;  /* Forcé en noir */
+}
+
+/* Réduire l'espacement entre les widgets dans le layout principal */
+#TextSearchPage > QVBoxLayout {
+    spacing: 5px;
+}
+
+/* Réduire la taille du titre pour économiser de l'espace vertical */
+#TextSearchPage QLabel[objectName="titleLabel"] {
+    font-size: 18px;
+    padding: 5px;
+    margin-bottom: 0;
+    color: #000000 !important;  /* Forcé en noir */
+}
+
+/* Forcer la couleur noire pour TOUS les widgets dans la zone de résultats */
+#TextSearchPage QGroupBox[title="Résultats"] * {
+    color: #000000 !important;  /* Tous les textes en noir */
+}
+
+/* Forcer la couleur noire pour toutes les étiquettes HTML */
+#TextSearchPage QLabel[text*="<"] {
+    color: #000000 !important;  /* Noir pour tous les labels avec HTML */
+}
+
+/* Spécifiquement pour les QFrame et QWidget dans les résultats */
+#TextSearchPage QGroupBox[title="Résultats"] QFrame,
+#TextSearchPage QGroupBox[title="Résultats"] QWidget {
+    background-color: transparent !important;
+    color: #000000 !important;
+}
+
+/* Ciblag spécifique pour les étiquettes des scores de similarité qui pourraient avoir une mise en forme spéciale */
+#TextSearchPage QLabel[text*="similarité"] {
+    color: #000000 !important;
+}
+
+/* Forcer également la couleur noire pour tous les QToolTip */
+#TextSearchPage QToolTip {
+    color: #000000 !important;
 } 

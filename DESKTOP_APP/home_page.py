@@ -104,14 +104,6 @@ class HomePage(QtWidgets.QWidget):
         self.titleLabel.setFont(font)
         self.headerLayout.addWidget(self.titleLabel)
         
-        # Sous-titre
-        self.subtitleLabel = QtWidgets.QLabel("Plateforme avancée de recherche et d'analyse d'images")
-        self.subtitleLabel.setAlignment(QtCore.Qt.AlignCenter)
-        font = QtGui.QFont()
-        font.setPointSize(11)
-        self.subtitleLabel.setFont(font)
-        self.headerLayout.addWidget(self.subtitleLabel)
-        
         # Séparateur
         self.separator = QtWidgets.QFrame()
         self.separator.setFrameShape(QtWidgets.QFrame.HLine)
