@@ -14,6 +14,7 @@ from matplotlib.figure import Figure
 import time
 from distances import getkVoisins_deep
 from search_page import MetricsWindow
+from metrics import calculate_metrics
 
 class DeepSearchPage(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -99,7 +100,7 @@ class DeepSearchPage(QtWidgets.QWidget):
         # Ajouter le bouton des métriques ici
         self.metricsButton = QtWidgets.QPushButton("Voir les métriques")
         self.metricsButton.setMinimumHeight(40)
-        self.metricsButton.setEnabled(False)  # Désactivé par défaut
+        self.metricsButton.setEnabled(False)  # Désactivé jusqu'à ce qu'une recherche soit effectuée
         self.buttonLayout.addWidget(self.metricsButton)
         
         # Ajouter un espace extensible pour pousser les boutons vers le haut
@@ -601,6 +602,9 @@ class DeepSearchPage(QtWidgets.QWidget):
         print("--------------------------------\n")
         
         print(f"Recherche terminée: {len(self.results)} résultats affichés")
+        
+        # Activer le bouton des métriques après la recherche
+        self.metricsButton.setEnabled(True)
     
     def clearResults(self):
         """Efface les résultats précédents"""
@@ -660,103 +664,39 @@ class DeepSearchPage(QtWidgets.QWidget):
         
         # Calculer et stocker les métriques
         self.calculateMetrics()
-        
-        # Activer le bouton des métriques
-        self.metricsButton.setEnabled(True)
     
     def calculateMetrics(self):
-        """Calcule les métriques d'évaluation"""
-        if not self.results:
-            self.metrics_data = {}
+        """Calcule les métriques d'évaluation pour la recherche actuelle"""
+        if not self.results or not self.image_path:
+            QtWidgets.QMessageBox.warning(
+                self, 
+                "Impossible de calculer les métriques", 
+                "Veuillez d'abord effectuer une recherche."
+            )
             return
         
-        # Extraire la classe de l'image requête
-        req_class = None
-        if self.image_path:
-            parts = self.image_path.split(os.sep)
-            if len(parts) >= 3:
-                # Format attendu: .../animal/race/image.jpg
-                animal_idx = max(0, len(parts) - 3)
-                breed_idx = max(0, len(parts) - 2)
-                req_class = f"{parts[animal_idx]}/{parts[breed_idx]}"
-        
-        if not req_class:
-            print(f"Impossible de déterminer la classe de l'image requête: {self.image_path}")
-            self.metrics_data = {}
-            return
-        
-        print(f"Classe de l'image requête: {req_class}")
-        
-        # Calculer les métriques
-        relevant_count = self.class_counts.get(req_class, 0)
-        if relevant_count == 0:
-            print(f"Aucune image trouvée pour la classe {req_class}")
-            self.metrics_data = {}
-            return
-        
-        # Initialiser les listes pour les calculs
-        relevants = []
-        precisions = []
-        recalls = []
-        
-        # Calculer précision et rappel à chaque rang
-        retrieved_relevant = 0
-        for i, (path, _, _) in enumerate(self.results):
-            parts = path.split(os.sep)
-            if len(parts) >= 3:
-                # Format attendu: .../animal/race/image.jpg
-                animal_idx = max(0, len(parts) - 3)
-                breed_idx = max(0, len(parts) - 2)
-                result_class = f"{parts[animal_idx]}/{parts[breed_idx]}"
-                
-                # Vérifier si le résultat est pertinent (même classe)
-                is_relevant = (result_class == req_class)
-                relevants.append(is_relevant)
-                
-                if is_relevant:
-                    retrieved_relevant += 1
-                
-                # Calculer précision et rappel à ce rang
-                precision = retrieved_relevant / (i + 1)
-                recall = retrieved_relevant / relevant_count
-                
-                precisions.append(precision)
-                recalls.append(recall)
-        
-        # Calculer la précision moyenne (AP)
-        ap = 0.0
-        if recalls:
-            # Utiliser la méthode de l'interpolation
-            for i in range(11):  # 11 points: 0.0, 0.1, ..., 1.0
-                r = i / 10
-                # Trouver toutes les précisions à des rappels >= r
-                p_at_r = [precisions[j] for j in range(len(recalls)) if recalls[j] >= r]
-                if p_at_r:
-                    ap += max(p_at_r) / 11
-        
-        # Calculer R-Precision
-        r_precision = 0.0
-        if relevant_count <= len(relevants):
-            r_precision = sum(relevants[:relevant_count]) / relevant_count
-        
-        # Stocker les métriques dans le dictionnaire
-        self.metrics_data = {
-            "Rappel": recalls[-1] if recalls else 0.0,
-            "Précision": precisions[-1] if precisions else 0.0,
-            "AP": ap,
-            "MAP": ap,  # Pour une seule requête, MAP = AP
-            "R-Precision": r_precision,
-            "precision_recall_curve": {
-                "recall": recalls,
-                "precision": precisions
-            }
-        }
-        
-        print(f"Métriques calculées: Rappel={self.metrics_data['Rappel']:.4f}, "
-              f"Précision={self.metrics_data['Précision']:.4f}, AP={self.metrics_data['AP']:.4f}, "
-              f"R-Precision={self.metrics_data['R-Precision']:.4f}")
+        # Utiliser la fonction du module metrics
+        self.metrics_data = calculate_metrics(self.results, self.image_path, self.class_counts)
     
     def showMetricsWindow(self):
         """Affiche la fenêtre des métriques d'évaluation"""
+        self.calculateMetrics()
         metrics_window = MetricsWindow(self, self.metrics_data)
-        metrics_window.exec_() 
+        metrics_window.exec_()
+
+    def count_classes(self):
+        """Compte le nombre d'images par classe dans la base de données"""
+        self.class_counts = {}
+        base_dir = "MIR_DATASETS_B"  # Ajuster le chemin si nécessaire
+        
+        if os.path.exists(base_dir):
+            for animal_dir in os.listdir(base_dir):
+                animal_path = os.path.join(base_dir, animal_dir)
+                if os.path.isdir(animal_path):
+                    for breed_dir in os.listdir(animal_path):
+                        breed_path = os.path.join(animal_path, breed_dir)
+                        if os.path.isdir(breed_path):
+                            class_key = f"{animal_dir}/{breed_dir}"
+                            image_count = len([f for f in os.listdir(breed_path) 
+                                              if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
+                            self.class_counts[class_key] = image_count 
