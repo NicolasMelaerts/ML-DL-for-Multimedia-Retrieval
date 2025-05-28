@@ -88,6 +88,17 @@ docker run -it --rm \
   desktop_app_image
 ```
 
+## 🔁 Lancement ultérieur de l'application desktop en partage de connexion (Iphone host 4G et Mac)
+
+```bash
+export DISPLAY=host.docker.internal:0
+docker run -it --rm \
+  -e DISPLAY=$DISPLAY \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -v "$(pwd)/DESKTOP_APP":/opt/DESKTOP_APP \
+  desktop_app_image
+```
+
 ---
 
 ## 🌐 Lancement du service web (SaaS)
