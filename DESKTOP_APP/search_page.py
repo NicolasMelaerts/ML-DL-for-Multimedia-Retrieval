@@ -14,8 +14,8 @@ import time
 from descriptors import extractReqFeatures
 from descriptors_page import showDialog
 from metrics import MetricsWindow, calculate_metrics
-
 from distances import getkVoisins
+import statistics
 
 class SearchPage(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -29,6 +29,10 @@ class SearchPage(QtWidgets.QWidget):
         self.class_counts = {}  # Pour stocker le nombre d'images par classe
         self.metrics_data = {}  # Pour stocker les métriques d'évaluation
         self.selected_descriptors = []  # Pour stocker les descripteurs sélectionnés
+        
+        # Variables pour les statistiques de temps
+        self.search_times = []  # Liste des temps de recherche
+        self.total_searches = 0  # Nombre total de recherches
         
         # Vérifier les descripteurs disponibles à l'initialisation
         self.checkAvailableDescriptors()
@@ -76,9 +80,6 @@ class SearchPage(QtWidgets.QWidget):
         self.checkBoxORB = QtWidgets.QCheckBox("ORB")
         self.descriptorsLayout.addWidget(self.checkBoxORB, 2, 1)
         
-        self.checkBoxSIFT = QtWidgets.QCheckBox("SIFT")
-        self.descriptorsLayout.addWidget(self.checkBoxSIFT, 3, 0)
-        
         # Sélection de la distance
         self.distanceGroup = QtWidgets.QGroupBox("Distance")
         self.distanceLayout = QtWidgets.QVBoxLayout(self.distanceGroup)
@@ -107,7 +108,7 @@ class SearchPage(QtWidgets.QWidget):
         self.buttonLayout.addWidget(self.displayGroup)
         
         self.displayComboBox = QtWidgets.QComboBox()
-        self.displayComboBox.addItems(["Top 20", "Top 50"])
+        self.displayComboBox.addItems(["Top 20", "Top 50", "Top 100"])
         self.displayLayout.addWidget(self.displayComboBox)
         
         self.searchButton = QtWidgets.QPushButton("Rechercher")
@@ -183,7 +184,6 @@ class SearchPage(QtWidgets.QWidget):
         self.checkBoxHOG.stateChanged.connect(self.updateDistanceOptions)
         self.checkBoxLBP.stateChanged.connect(self.updateDistanceOptions)
         self.checkBoxORB.stateChanged.connect(self.updateDistanceOptions)
-        self.checkBoxSIFT.stateChanged.connect(self.updateDistanceOptions)
     
     def updateDistanceOptions(self):
         """Met à jour les options de distance en fonction des descripteurs sélectionnés"""
@@ -200,7 +200,7 @@ class SearchPage(QtWidgets.QWidget):
             self.distanceComboBox.addItems(["Chi carre", "Intersection", "Bhattacharyya", "Correlation"])
         
         # Ajouter des distances spécifiques pour ORB et SIFT
-        if any([self.checkBoxORB.isChecked(), self.checkBoxSIFT.isChecked()]):
+        if any([self.checkBoxORB.isChecked()]):
             self.distanceComboBox.addItem("Brute force")
             self.distanceComboBox.addItem("Flann")
         
@@ -263,7 +263,6 @@ class SearchPage(QtWidgets.QWidget):
         # Si aucun fichier ne correspond au format spécifique, essayer de charger tous les fichiers .txt
         if not all_files:
             all_files = [f for f in os.listdir(folder_path) if f.endswith('.txt')]
-            print(f"Aucun fichier au format Methode_{algo_id}_*.txt trouvé, chargement de tous les fichiers .txt")
         
         total_files = len(all_files)
         
@@ -397,15 +396,20 @@ class SearchPage(QtWidgets.QWidget):
             self.checkBoxGLCM.isChecked(),
             self.checkBoxHOG.isChecked(),
             self.checkBoxLBP.isChecked(),
-            self.checkBoxORB.isChecked(),
-            self.checkBoxSIFT.isChecked()
+            self.checkBoxORB.isChecked()
         ]):
             showDialog()
             return
         
+        # Commencer le chronométrage du chargement
+        start_time = time.time()
+        print("=" * 50)
+        print("DÉBUT DU CHARGEMENT DES DESCRIPTEURS")
+        print("=" * 50)
+        
         self.features = {}  # Réinitialiser les descripteurs
         self.progressBar.setValue(0)
-        QtWidgets.QApplication.processEvents()  # Forcer la mise à jour de l'interface
+        QtWidgets.QApplication.processEvents()
         
         # Charger les descripteurs sélectionnés
         total_descriptors = sum([
@@ -414,8 +418,7 @@ class SearchPage(QtWidgets.QWidget):
             self.checkBoxGLCM.isChecked(),
             self.checkBoxHOG.isChecked(),
             self.checkBoxLBP.isChecked(),
-            self.checkBoxORB.isChecked(),
-            self.checkBoxSIFT.isChecked()
+            self.checkBoxORB.isChecked()
         ])
         
         progress = 0
@@ -423,90 +426,100 @@ class SearchPage(QtWidgets.QWidget):
         
         # Charger histogramme de couleurs
         if self.checkBoxColor.isChecked():
-            self.progressBar.setValue(0)  # Réinitialiser pour chaque type de descripteur
+            desc_start = time.time()
+            self.progressBar.setValue(0)
             QtWidgets.QApplication.processEvents()
             features_color = self.loadFeatureType('BGR', 1)
-            if features_color:  # Vérifier si des descripteurs ont été chargés
+            if features_color:
                 self.features['BGR'] = features_color
                 loaded_descriptors.append('BGR')
+            desc_time = time.time() - desc_start
+            print(f"Chargement BGR: {desc_time:.2f}s ({len(features_color) if features_color else 0} descripteurs)")
             progress += 1
             self.progressBar.setValue(int(100 * progress / total_descriptors))
             QtWidgets.QApplication.processEvents()
         
         # Charger HOG
         if self.checkBoxHOG.isChecked():
-            self.progressBar.setValue(0)  # Réinitialiser pour chaque type de descripteur
+            desc_start = time.time()
+            self.progressBar.setValue(0)
             QtWidgets.QApplication.processEvents()
             features_hog = self.loadFeatureType('HOG', 2)
-            if features_hog:  # Vérifier si des descripteurs ont été chargés
+            if features_hog:
                 self.features['HOG'] = features_hog
                 loaded_descriptors.append('HOG')
+            desc_time = time.time() - desc_start
+            print(f"Chargement HOG: {desc_time:.2f}s ({len(features_hog) if features_hog else 0} descripteurs)")
             progress += 1
             self.progressBar.setValue(int(100 * progress / total_descriptors))
             QtWidgets.QApplication.processEvents()
         
         # Charger LBP
         if self.checkBoxLBP.isChecked():
-            self.progressBar.setValue(0)  # Réinitialiser pour chaque type de descripteur
+            desc_start = time.time()
+            self.progressBar.setValue(0)
             QtWidgets.QApplication.processEvents()
             features_lbp = self.loadFeatureType('LBP', 3)
-            if features_lbp:  # Vérifier si des descripteurs ont été chargés
+            if features_lbp:
                 self.features['LBP'] = features_lbp
                 loaded_descriptors.append('LBP')
+            desc_time = time.time() - desc_start
+            print(f"Chargement LBP: {desc_time:.2f}s ({len(features_lbp) if features_lbp else 0} descripteurs)")
             progress += 1
             self.progressBar.setValue(int(100 * progress / total_descriptors))
             QtWidgets.QApplication.processEvents()
         
         # Charger ORB
         if self.checkBoxORB.isChecked():
-            self.progressBar.setValue(0)  # Réinitialiser pour chaque type de descripteur
+            desc_start = time.time()
+            self.progressBar.setValue(0)
             QtWidgets.QApplication.processEvents()
             features_orb = self.loadFeatureType('ORB', 4)
-            if features_orb:  # Vérifier si des descripteurs ont été chargés
+            if features_orb:
                 self.features['ORB'] = features_orb
                 loaded_descriptors.append('ORB')
+            desc_time = time.time() - desc_start
+            print(f"Chargement ORB: {desc_time:.2f}s ({len(features_orb) if features_orb else 0} descripteurs)")
             progress += 1
             self.progressBar.setValue(int(100 * progress / total_descriptors))
             QtWidgets.QApplication.processEvents()
         
         # Charger Histogramme HSV
         if self.checkBoxHSV.isChecked():
-            self.progressBar.setValue(0)  # Réinitialiser pour chaque type de descripteur
+            desc_start = time.time()
+            self.progressBar.setValue(0)
             QtWidgets.QApplication.processEvents()
             features_hsv = self.loadFeatureType('HSV', 5)
-            if features_hsv:  # Vérifier si des descripteurs ont été chargés
+            if features_hsv:
                 self.features['HSV'] = features_hsv
                 loaded_descriptors.append('HSV')
+            desc_time = time.time() - desc_start
+            print(f"Chargement HSV: {desc_time:.2f}s ({len(features_hsv) if features_hsv else 0} descripteurs)")
             progress += 1
             self.progressBar.setValue(int(100 * progress / total_descriptors))
             QtWidgets.QApplication.processEvents()
         
         # Charger GLCM
         if self.checkBoxGLCM.isChecked():
-            self.progressBar.setValue(0)  # Réinitialiser pour chaque type de descripteur
+            desc_start = time.time()
+            self.progressBar.setValue(0)
             QtWidgets.QApplication.processEvents()
             features_glcm = self.loadFeatureType('GLCM', 6)
-            if features_glcm:  # Vérifier si des descripteurs ont été chargés
+            if features_glcm:
                 self.features['GLCM'] = features_glcm
                 loaded_descriptors.append('GLCM')
+            desc_time = time.time() - desc_start
+            print(f"Chargement GLCM: {desc_time:.2f}s ({len(features_glcm) if features_glcm else 0} descripteurs)")
             progress += 1
             self.progressBar.setValue(int(100 * progress / total_descriptors))
             QtWidgets.QApplication.processEvents()
         
-        # Charger SIFT
-        if self.checkBoxSIFT.isChecked():
-            self.progressBar.setValue(0)  # Réinitialiser pour chaque type de descripteur
-            QtWidgets.QApplication.processEvents()
-            features_sift = self.loadFeatureType('SIFT', 7)
-            if features_sift:  # Vérifier si des descripteurs ont été chargés
-                self.features['SIFT'] = features_sift
-                loaded_descriptors.append('SIFT')
-            progress += 1
-            self.progressBar.setValue(int(100 * progress / total_descriptors))
-            QtWidgets.QApplication.processEvents()
-        
-        self.progressBar.setValue(100)
-        QtWidgets.QApplication.processEvents()
+        # Temps total de chargement
+        total_loading_time = time.time() - start_time
+        print("-" * 50)
+        print(f"TEMPS TOTAL DE CHARGEMENT: {total_loading_time:.2f}s")
+        print(f"Descripteurs chargés: {', '.join(loaded_descriptors)}")
+        print("=" * 50)
         
         # Mettre à jour la liste des descripteurs sélectionnés
         self.selected_descriptors = loaded_descriptors
@@ -553,14 +566,13 @@ class SearchPage(QtWidgets.QWidget):
             'LBP': 3,
             'ORB': 4,
             'HSV': 5,
-            'GLCM': 6,
-            'SIFT': 7
+            'GLCM': 6
         }
         return mapping.get(desc_type, 0)
 
     def adapt_distance_for_descriptor(self, desc_type, distance_name):
         """Adapte la mesure de distance au type de descripteur"""
-        if desc_type in ['ORB', 'SIFT'] and distance_name not in ["Brute force", "Flann"]:
+        if desc_type == 'ORB' and distance_name not in ["Brute force", "Flann"]:
             return "Brute force"
         elif desc_type in ['BGR', 'HSV'] and distance_name in ["Chi carre", "Intersection", "Bhattacharyya", "Correlation"]:
             return distance_name
@@ -568,6 +580,14 @@ class SearchPage(QtWidgets.QWidget):
     
     def search(self):
         """Effectue la recherche d'images similaires avec combinaison de descripteurs"""
+        # Commencer le chronométrage de la recherche
+        search_start_time = time.time()
+        self.total_searches += 1
+        
+        print("\n" + "=" * 50)
+        print(f"DÉBUT DE LA RECHERCHE #{self.total_searches}")
+        print("=" * 50)
+        
         # Vérifier qu'une image est chargée
         if not self.image_path:
             QtWidgets.QMessageBox.warning(self, "Attention", 
@@ -588,8 +608,6 @@ class SearchPage(QtWidgets.QWidget):
             selected_descriptors.append('LBP')
         if self.checkBoxORB.isChecked() and 'ORB' in self.features:
             selected_descriptors.append('ORB')
-        if self.checkBoxSIFT.isChecked() and 'SIFT' in self.features:
-            selected_descriptors.append('SIFT')
         
         if not selected_descriptors:
             QtWidgets.QMessageBox.warning(self, "Attention", 
@@ -608,7 +626,9 @@ class SearchPage(QtWidgets.QWidget):
         
         # Déterminer le nombre d'images à afficher
         display_option = self.displayComboBox.currentText()
-        k = 20 if display_option == "Top 20" else 50
+        k = 20 if display_option == "Top 20" else (50 if display_option == "Top 50" else 100)
+        print(f"Nombre de résultats demandés: {k}")
+        print(f"Descripteurs sélectionnés: {', '.join(selected_descriptors)}")
         
         # Récupérer la distance sélectionnée
         distance_name = self.distanceComboBox.currentText()
@@ -626,6 +646,8 @@ class SearchPage(QtWidgets.QWidget):
         
         # Effectuer la recherche pour chaque descripteur sélectionné
         for desc_idx, desc_type in enumerate(selected_descriptors):
+            desc_search_start = time.time()
+            
             # Mettre à jour la barre de progression
             progress = int(100 * desc_idx / len(selected_descriptors))
             self.progressBar.setValue(progress)
@@ -636,9 +658,9 @@ class SearchPage(QtWidgets.QWidget):
                 algo_choice = self.get_algo_choice(desc_type)
                 req_features = extractReqFeatures(self.image_path, algo_choice)
                 
-                # Vérifier si les dimensions sont compatibles avec les descripteurs de la base
+                # Pour tous les descripteurs, traitement normal
                 if len(self.features[desc_type]) > 0:
-                    sample_feature = self.features[desc_type][0][1]  # Prendre le premier descripteur comme exemple
+                    sample_feature = self.features[desc_type][0][1]
                     if hasattr(req_features, 'shape') and hasattr(sample_feature, 'shape'):
                         if req_features.shape != sample_feature.shape:
                             print(f"Dimensions incompatibles: {req_features.shape} vs {sample_feature.shape}")
@@ -674,11 +696,14 @@ class SearchPage(QtWidgets.QWidget):
                     min_scores[desc_type] = min_score
                     max_scores[desc_type] = max_score
                 
-                print(f"Recherche avec {desc_type} terminée: {len(neighbors)} résultats trouvés")
+                print(f"Recherche avec {desc_type}: {len(neighbors) if 'neighbors' in locals() else 0} résultats trouvés")
             except Exception as e:
                 print(f"Erreur lors de la recherche avec {desc_type}: {str(e)}")
                 import traceback
                 traceback.print_exc()
+            
+            desc_search_time = time.time() - desc_search_start
+            print(f"Recherche avec {desc_type}: {desc_search_time:.3f}s - {len(neighbors) if 'neighbors' in locals() else 0} résultats")
         
         # Combiner les scores pour tous les descripteurs
         combined_results = []
@@ -726,6 +751,24 @@ class SearchPage(QtWidgets.QWidget):
         self.progressBar.setValue(100)
         
         print(f"Recherche terminée: {len(self.results)} résultats affichés")
+        
+        # Temps total de recherche
+        total_search_time = time.time() - search_start_time
+        self.search_times.append(total_search_time)
+        
+        # Calculer le temps moyen
+        average_search_time = statistics.mean(self.search_times)
+        
+        # Affichage des statistiques
+        print("-" * 50)
+        print(f"TEMPS DE RECHERCHE: {total_search_time:.3f}s")
+        print(f"TEMPS MOYEN ({len(self.search_times)} recherches): {average_search_time:.3f}s")
+        print(f"Résultats trouvés: {len(self.results)}")
+        if len(self.search_times) > 1:
+            min_time = min(self.search_times)
+            max_time = max(self.search_times)
+            print(f"Temps min/max: {min_time:.3f}s / {max_time:.3f}s")
+        print("=" * 50)
     
     def clearResults(self):
         """Nettoie les résultats précédents"""
@@ -816,15 +859,14 @@ class SearchPage(QtWidgets.QWidget):
             print("Le dossier Descripteurs n'existe pas")
             return
         
-        # Liste des descripteurs et leurs checkboxes correspondantes
+        # Liste des descripteurs et leurs checkboxes correspondantes (sans SIFT)
         descriptors_checkboxes = {
             'BGR': self.checkBoxColor,
             'HSV': self.checkBoxHSV,
             'GLCM': self.checkBoxGLCM,
             'HOG': self.checkBoxHOG,
             'LBP': self.checkBoxLBP,
-            'ORB': self.checkBoxORB,
-            'SIFT': self.checkBoxSIFT
+            'ORB': self.checkBoxORB
         }
         
         # Parcourir les sous-dossiers de Descripteurs

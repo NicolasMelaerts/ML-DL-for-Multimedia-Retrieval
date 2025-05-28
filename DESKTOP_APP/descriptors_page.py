@@ -8,7 +8,6 @@ import os
 from descriptors import (
     generateHistogramme_Color, 
     generateHistogramme_HSV, 
-    generateSIFT, 
     generateORB,
     generateGLCM,
     generateLBP,
@@ -53,12 +52,6 @@ class DescriptorsPage(QtWidgets.QWidget):
         
         # Dictionnaire des descripteurs avec leurs descriptions
         self.descriptors_info = {
-            "SIFT": "Scale-Invariant Feature Transform (SIFT)\n\n"
-                   "• Détecte et décrit les points d'intérêt locaux\n"
-                   "• Invariant à l'échelle et à la rotation\n"
-                   "• Partiellement invariant aux changements d'illumination\n"
-                   "• Utile pour la reconnaissance d'objets",
-                   
             "ORB": "Oriented FAST and Rotated BRIEF (ORB)\n\n"
                    "• Alternative rapide à SIFT et SURF\n"
                    "• Combine le détecteur FAST et le descripteur BRIEF\n"
@@ -192,7 +185,6 @@ class DescriptorsPage(QtWidgets.QWidget):
         descriptors = {
             "BGR": self.checkBox_HistCouleur,
             "HSV": self.checkBox_HistHSV,
-            "SIFT": self.checkBox_SIFT,
             "ORB": self.checkBox_ORB,
             "GLCM": self.checkBox_GLCM,
             "LBP": self.checkBox_LBP,
@@ -228,8 +220,8 @@ class DescriptorsPage(QtWidgets.QWidget):
             return
 
         # Vérifier si l'utilisateur a sélectionné un descripteur
-        if not (self.checkBox_SIFT.isChecked() or self.checkBox_HistCouleur.isChecked() or 
-                self.checkBox_HistHSV.isChecked() or self.checkBox_ORB.isChecked() or
+        if not (self.checkBox_ORB.isChecked() or self.checkBox_HistCouleur.isChecked() or 
+                self.checkBox_HistHSV.isChecked() or
                 self.checkBox_GLCM.isChecked() or self.checkBox_LBP.isChecked() or
                 self.checkBox_HOG.isChecked()):
             showDialog()
@@ -258,16 +250,6 @@ class DescriptorsPage(QtWidgets.QWidget):
                 self.logTextEdit.append("Calcul du descripteur Histogramme HSV...")
                 generateHistogramme_HSV(self.Dossier_images, self.update_progress)
                 calculated_descriptors.append("Histogramme HSV")
-        
-        if self.checkBox_SIFT.isChecked():
-            desc_path = os.path.join("Descripteurs", "SIFT")
-            if os.path.exists(desc_path):
-                self.logTextEdit.append("Descripteur SIFT déjà calculé, calcul ignoré")
-            else:
-                self.currentDescriptorLabel.setText("Descripteur en cours: SIFT")
-                self.logTextEdit.append("Calcul du descripteur SIFT...")
-                generateSIFT(self.Dossier_images, self.update_progress)
-                calculated_descriptors.append("SIFT")
         
         if self.checkBox_ORB.isChecked():
             desc_path = os.path.join("Descripteurs", "ORB")
@@ -328,3 +310,45 @@ class DescriptorsPage(QtWidgets.QWidget):
                 "Information", 
                 "Tous les descripteurs sélectionnés étaient déjà calculés."
             ) 
+
+    def calculateDescriptors(self):
+        """Calcule les descripteurs pour toutes les images"""
+        # ... existing validation code ...
+        
+        # Déterminer quels descripteurs calculer
+        descriptors_to_calculate = []
+        if self.checkBoxColor.isChecked():
+            descriptors_to_calculate.append(('BGR', 1))
+        if self.checkBoxHOG.isChecked():
+            descriptors_to_calculate.append(('HOG', 2))
+        if self.checkBoxLBP.isChecked():
+            descriptors_to_calculate.append(('LBP', 3))
+        if self.checkBoxORB.isChecked():
+            descriptors_to_calculate.append(('ORB', 4))
+        if self.checkBoxHSV.isChecked():
+            descriptors_to_calculate.append(('HSV', 5))
+        if self.checkBoxGLCM.isChecked():
+            descriptors_to_calculate.append(('GLCM', 6))
+        # Supprimer SIFT (était algo_choice 7)
+        
+        # ... existing code ...
+        
+        print(f"Descripteurs à calculer: {[desc[0] for desc in descriptors_to_calculate]}")
+        
+        # ... rest of existing calculation code ...
+
+    def checkAvailableDescriptors(self):
+        """Vérifie quels descripteurs sont disponibles et met à jour l'interface"""
+        # ... existing validation code ...
+        
+        # Liste des descripteurs et leurs checkboxes correspondantes (sans SIFT)
+        descriptors_checkboxes = {
+            'BGR': self.checkBoxColor,
+            'HSV': self.checkBoxHSV,
+            'GLCM': self.checkBoxGLCM,
+            'HOG': self.checkBoxHOG,
+            'LBP': self.checkBoxLBP,
+            'ORB': self.checkBoxORB
+        }
+        
+        # ... rest of existing verification code ... 

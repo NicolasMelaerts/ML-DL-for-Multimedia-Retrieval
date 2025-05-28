@@ -77,7 +77,7 @@ class DeepSearchPage(QtWidgets.QWidget):
         self.controlLayout.addWidget(self.displayGroup)
         
         self.displayComboBox = QtWidgets.QComboBox()
-        self.displayComboBox.addItems(["Top 20", "Top 50"])
+        self.displayComboBox.addItems(["Top 20", "Top 50", "Top 100"])
         self.displayLayout.addWidget(self.displayComboBox)
         
         # ZONE 2: Boutons d'action
@@ -505,8 +505,10 @@ class DeepSearchPage(QtWidgets.QWidget):
         display_choice = self.displayComboBox.currentText()
         if display_choice == "Top 20":
             k = 20
-        else:  # "Top 50"
+        elif display_choice == "Top 50":
             k = 50
+        else:  # "Top 100"
+            k = 100
         
         print("\n--- MESURE DES PERFORMANCES DE RECHERCHE PROFONDE ---")
         print(f"Image requête: {self.image_path}")
