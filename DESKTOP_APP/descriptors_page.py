@@ -14,7 +14,6 @@ from descriptors import (
     generateHOG
 )
 
-# Ajouter la fonction showDialog qui était dans descriptors.py
 def showDialog():
     msgBox = QtWidgets.QMessageBox()
     msgBox.setIcon(QtWidgets.QMessageBox.Information)
@@ -313,7 +312,6 @@ class DescriptorsPage(QtWidgets.QWidget):
 
     def calculateDescriptors(self):
         """Calcule les descripteurs pour toutes les images"""
-        # ... existing validation code ...
         
         # Déterminer quels descripteurs calculer
         descriptors_to_calculate = []
@@ -329,17 +327,13 @@ class DescriptorsPage(QtWidgets.QWidget):
             descriptors_to_calculate.append(('HSV', 5))
         if self.checkBoxGLCM.isChecked():
             descriptors_to_calculate.append(('GLCM', 6))
-        # Supprimer SIFT (était algo_choice 7)
         
-        # ... existing code ...
         
         print(f"Descripteurs à calculer: {[desc[0] for desc in descriptors_to_calculate]}")
-        
-        # ... rest of existing calculation code ...
+    
 
     def checkAvailableDescriptors(self):
         """Vérifie quels descripteurs sont disponibles et met à jour l'interface"""
-        # ... existing validation code ...
         
         # Liste des descripteurs et leurs checkboxes correspondantes (sans SIFT)
         descriptors_checkboxes = {
@@ -350,5 +344,3 @@ class DescriptorsPage(QtWidgets.QWidget):
             'LBP': self.checkBoxLBP,
             'ORB': self.checkBoxORB
         }
-        
-        # ... rest of existing verification code ... 

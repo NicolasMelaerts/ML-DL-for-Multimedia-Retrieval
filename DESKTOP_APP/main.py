@@ -6,7 +6,7 @@ Point d'entrée principal de l'application
 import sys
 import os
 from PyQt5.QtWidgets import QApplication
-from home_page import HomePage  # Importez votre classe de page d'accueil
+from home_page import HomePage  # Importez classe de page d'accueil
 
 def main():
     # Créer l'application

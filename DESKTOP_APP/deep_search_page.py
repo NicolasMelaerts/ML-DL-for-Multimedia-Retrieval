@@ -171,7 +171,6 @@ class DeepSearchPage(QtWidgets.QWidget):
             # Charger l'image avec OpenCV pour pouvoir la redimensionner
             img = cv2.imread(self.image_path)
             if img is not None:
-                # Redimensionner l'image à une taille plus petite (par exemple 300x300 max)
                 height, width = img.shape[:2]
                 max_size = 200
                 if height > max_size or width > max_size:
