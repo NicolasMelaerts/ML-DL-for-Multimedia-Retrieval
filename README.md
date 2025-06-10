@@ -9,6 +9,11 @@ Ce projet utilise Docker pour encapsuler une application PyQt et un service web 
 - Docker installé : https://docs.docker.com/get-docker/
 - X11 installé et fonctionnel (pour afficher une interface graphique depuis Docker)
 - Sur macOS : XQuartz doit être installé : https://www.xquartz.org/
+- Cloner le dépot Git :
+```bash
+git clone https://github.com/NicolasMelaerts/ML-DL-for-Multimedia-Retrieval.git
+cd ML-DL-for-Multimedia-Retrieval
+```
 
 ---
 
