@@ -29,23 +29,35 @@ deep_search_bp = Blueprint('deep_search', __name__)
 # Modèles disponibles
 MODELS = {
     'GoogLeNet': 'GoogLeNet',
-    'Inception': 'Inception v3',
+    'Inception3': 'Inception v3',
     'ResNet': 'ResNet',
     'ViT': 'Vision Transformer (ViT)',
     'VGG': 'VGG'
 }
+
+# Configuration des animaux et races pour la recherche rapide d'images
+animaux = ["araignee", "chiens", "oiseaux", "poissons", "singes"]
+araignees = ["barn spider", "garden spider", "orb-weaving spider", "tarantula", "trap_door spider", "wolf spider"]
+chiens = ["boxer", "Chihuahua", "golden\x20retriever", "Labrador\x20retriever", "Rottweiler", "Siberian\x20husky"]
+oiseaux = ["blue jay", "bulbul", "great grey owl", "parrot", "robin", "vulture"]
+poissons = ["dogfish", "eagle ray", "guitarfish", "hammerhead", "ray", "tiger shark"]
+singes = ["baboon", "chimpanzee", "gorilla", "macaque", "orangutan", "squirrel monkey"]
 
 @deep_search_bp.route('/', methods=['GET', 'POST'])
 def index():
     results = []
     query_image_data = None
     metrics_data = None
+    performance_info = {}
     
     if request.method == 'POST':
+        # Mesurer le temps total
+        total_start_time = time.time()
+        
         # Récupérer les modèles sélectionnés
         selected_models = []
         if request.form.get('googlenet'): selected_models.append('GoogLeNet')
-        if request.form.get('inception'): selected_models.append('Inception')
+        if request.form.get('inception'): selected_models.append('Inception3')
         if request.form.get('resnet'): selected_models.append('ResNet')
         if request.form.get('vit'): selected_models.append('ViT')
         if request.form.get('vgg'): selected_models.append('VGG')
@@ -65,6 +77,9 @@ def index():
         if 'query_image' in request.files:
             query_file = request.files['query_image']
             if query_file.filename != '':
+                # Mesurer le temps de traitement de l'image
+                image_processing_start = time.time()
+                
                 # Sauvegarder temporairement l'image
                 temp_path = os.path.join(TEMP_FOLDER, 'temp_query.jpg')
                 
@@ -80,6 +95,12 @@ def index():
                 # Charger l'image pour l'affichage
                 with open(temp_path, 'rb') as img_file:
                     query_image_data = base64.b64encode(img_file.read()).decode('utf-8')
+                
+                image_processing_time = time.time() - image_processing_start
+                performance_info["image_processing_time"] = round(image_processing_time, 4)
+                
+                # Mesurer le temps de chargement des features
+                features_loading_start = time.time()
                 
                 # Charger les features et les images pour tous les modèles sélectionnés
                 features_dict = {}
@@ -98,6 +119,14 @@ def index():
                     else:
                         flash(f"Aucune feature chargée pour {model}", "warning")
                 
+                features_loading_time = time.time() - features_loading_start
+                performance_info["features_loading_time"] = round(features_loading_time, 4)
+                performance_info["features_count"] = sum(len(f) for f in features_dict.values())
+                performance_info["images_count"] = len(image_dict)
+                
+                # Mesurer le temps de recherche
+                search_start = time.time()
+                
                 # Effectuer la recherche pour chaque modèle
                 all_results = []
                 
@@ -115,11 +144,23 @@ def index():
                     else:
                         flash(f"L'image requête n'a pas de features pour le modèle {model_name}", "warning")
                 
+                search_time = time.time() - search_start
+                performance_info["search_time"] = round(search_time, 4)
+                
+                # Mesurer le temps de tri
+                sort_start = time.time()
+                
                 # Trier les résultats par distance (croissante)
                 all_results.sort(key=lambda x: x[1])
                 
                 # Limiter aux k premiers résultats
                 all_results = all_results[:top_k]
+                
+                sort_time = time.time() - sort_start
+                performance_info["sort_time"] = round(sort_time, 4)
+                
+                # Mesurer le temps de préparation des résultats
+                display_start = time.time()
                 
                 # Préparer les résultats pour l'affichage
                 formatted_results = []
@@ -150,18 +191,33 @@ def index():
                     except Exception as e:
                         flash(f"Erreur lors du traitement de l'image {path}: {str(e)}", "error")
                 
+                display_time = time.time() - display_start
+                performance_info["display_time"] = round(display_time, 4)
+                
+                # Mesurer le temps de calcul des métriques
+                metrics_start = time.time()
+                
                 # Calculer les métriques
                 metrics_data = calculate_metrics(formatted_results, temp_path, class_counts)
+                
+                metrics_time = time.time() - metrics_start
+                performance_info["metrics_time"] = round(metrics_time, 4)
                 
                 # Supprimer l'image temporaire
                 if os.path.exists(temp_path):
                     os.remove(temp_path)
                 
                 results = formatted_results
+                
+                # Temps total
+                total_time = time.time() - total_start_time
+                performance_info["total_time"] = round(total_time, 4)
     
     # Ajouter ces logs avant le return
     print(f"Résultats: {len(results) if results else 0}")
     print(f"Métriques disponibles: {'Oui' if metrics_data else 'Non'}")
+    if performance_info:
+        print(f"Temps total: {performance_info.get('total_time', 0)} secondes")
     
     return render_template(
         'deep_search.html',
@@ -169,7 +225,8 @@ def index():
         models=MODELS,
         results=results,
         query_image=query_image_data,
-        metrics=metrics_data
+        metrics=metrics_data,
+        performance_info=performance_info
     )
 
 def load_features_with_images(model_name, image_folder):
@@ -183,6 +240,8 @@ def load_features_with_images(model_name, image_folder):
     Returns:
         Tuple (features_dict, image_dict) contenant les features et les chemins des images
     """
+    start_time = time.time()
+    
     feature_folder = os.path.join(FEATURES_FOLDER, model_name)
     feature_files = sorted(glob.glob(os.path.join(feature_folder, "*.txt")))
     features_dict = {}
@@ -198,32 +257,124 @@ def load_features_with_images(model_name, image_folder):
             # Stocker les features
             features_dict[base_name] = feature_vector
             
-            # Trouver l'image correspondante
-            # D'abord, essayer de trouver l'image directement
-            image_path_jpg = os.path.join(image_folder, base_name + ".jpg")
-            image_path_jpeg = os.path.join(image_folder, base_name + ".jpeg")
-            image_path_png = os.path.join(image_folder, base_name + ".png")
-            
-            # Vérifier l'existence des images
-            if os.path.exists(image_path_jpg):
-                image_dict[base_name] = image_path_jpg
-            elif os.path.exists(image_path_jpeg):
-                image_dict[base_name] = image_path_jpeg
-            elif os.path.exists(image_path_png):
-                image_dict[base_name] = image_path_png
+            # Trouver l'image correspondante en utilisant la méthode optimisée
+            image_path = find_image_path(base_name)
+            if image_path:
+                image_dict[base_name] = image_path
             else:
-                # Si l'image n'est pas trouvée directement, essayer de la chercher dans les sous-dossiers
-                found_path = find_image_in_directory(image_folder, base_name)
-                if found_path:
-                    image_dict[base_name] = found_path
-                else:
-                    print(f"Aucune image trouvée pour {file} !")
+                print(f"Aucune image trouvée pour {file} !")
         except Exception as e:
             print(f"Erreur lors du chargement de {file}: {str(e)}")
     
-    print(f"{len(features_dict)} caractéristiques chargées avec {len(image_dict)} images depuis {feature_folder}")
+    elapsed_time = time.time() - start_time
+    print(f"{len(features_dict)} caractéristiques chargées avec {len(image_dict)} images depuis {feature_folder} en {elapsed_time:.2f} secondes")
     
     return features_dict, image_dict
+
+def find_image_path(image_filename, animal=None, race=None):
+    """
+    Trouve le chemin d'une image en utilisant directement les informations d'animal et de race
+    """
+    # Si animal et race sont fournis, utiliser directement ces informations
+    if animal and race:
+        # Essayer différentes extensions
+        for img_ext in ['.jpg', '.jpeg', '.png']:
+            # Extraire le nom de base sans extension
+            base_name = os.path.splitext(image_filename)[0]
+            direct_path = os.path.join(IMAGE_FOLDER, animal, race, f"{base_name}{img_ext}")
+            if os.path.exists(direct_path):
+                return direct_path
+        
+        # Si aucune correspondance exacte, essayer de trouver la race correspondante
+        races_list = None
+        if animal == "araignee":
+            races_list = araignees
+        elif animal == "chiens":
+            races_list = chiens
+        elif animal == "oiseaux":
+            races_list = oiseaux
+        elif animal == "poissons":
+            races_list = poissons
+        elif animal == "singes":
+            races_list = singes
+        
+        if races_list:
+            matching_race = find_matching_race(race, races_list)
+            if matching_race:
+                for img_ext in ['.jpg', '.jpeg', '.png']:
+                    base_name = os.path.splitext(image_filename)[0]
+                    direct_path = os.path.join(IMAGE_FOLDER, animal, matching_race, f"{base_name}{img_ext}")
+                    if os.path.exists(direct_path):
+                        return direct_path
+    
+    # Si on arrive ici ou si animal/race ne sont pas fournis, parcourir tous les animaux et races
+    # Extraire le nom de base sans extension
+    base_name = os.path.splitext(image_filename)[0]
+    
+    # Parcourir tous les animaux et races
+    for animal in animaux:
+        races_list = None
+        if animal == "araignee":
+            races_list = araignees
+        elif animal == "chiens":
+            races_list = chiens
+        elif animal == "oiseaux":
+            races_list = oiseaux
+        elif animal == "poissons":
+            races_list = poissons
+        elif animal == "singes":
+            races_list = singes
+        
+        if races_list:
+            for race in races_list:
+                # Essayer de trouver l'image dans ce dossier
+                for img_ext in ['.jpg', '.jpeg', '.png']:
+                    image_name = f"{base_name}{img_ext}"
+                    direct_path = os.path.join(IMAGE_FOLDER, animal, race, image_name)
+                    if os.path.exists(direct_path):
+                        return direct_path
+    
+    # Si on arrive ici, essayer une dernière approche
+    return find_image_in_directory(IMAGE_FOLDER, base_name)
+
+def find_matching_race(race_name, races_list):
+    """
+    Trouve la race correspondante dans la liste, en tenant compte des différents formats
+    """
+    if not races_list:
+        return None
+    
+    # Normaliser le nom de race du fichier
+    race_name_lower = race_name.lower()
+    
+    # 1. Essayer une correspondance directe
+    for race in races_list:
+        if race.lower() == race_name_lower:
+            return race
+    
+    # 2. Essayer en remplaçant les espaces par des underscores
+    for race in races_list:
+        if race.lower().replace(' ', '_') == race_name_lower:
+            return race
+    
+    # 3. Essayer en supprimant les espaces
+    for race in races_list:
+        if race.lower().replace(' ', '') == race_name_lower:
+            return race
+    
+    # 4. Essayer une correspondance partielle
+    for race in races_list:
+        race_lower = race.lower()
+        if race_name_lower in race_lower or race_lower in race_name_lower:
+            return race
+        
+        # Essayer aussi sans les espaces
+        race_lower_no_spaces = race_lower.replace(' ', '')
+        if race_name_lower in race_lower_no_spaces or race_lower_no_spaces in race_name_lower:
+            return race
+    
+    # Si aucune correspondance n'est trouvée, retourner la première race de la liste
+    return races_list[0]
 
 def find_image_in_directory(base_dir, image_name):
     """
@@ -368,9 +519,28 @@ def calculate_metrics(results, query_path, class_counts):
 @deep_search_bp.route('/metrics', methods=['POST'])
 def show_metrics():
     """Endpoint pour afficher les métriques en AJAX"""
+    print("Endpoint /metrics appelé")
     data = request.json
     if not data or 'metrics' not in data:
+        print("Erreur: Aucune donnée de métriques fournie")
         return jsonify({'error': 'Aucune donnée de métriques fournie'}), 400
     
     metrics = data['metrics']
+    print(f"Métriques reçues: {metrics}")
+    
+    # Vérifier que les métriques ont les propriétés nécessaires
+    required_props = ['rappel', 'precision', 'ap', 'r_precision']
+    missing_props = [prop for prop in required_props if prop not in metrics]
+    
+    if missing_props:
+        print(f"Propriétés manquantes dans les métriques: {missing_props}")
+        # Initialiser les propriétés manquantes à 0
+        for prop in missing_props:
+            metrics[prop] = 0.0
+    
+    # Vérifier si precision_recall existe et créer un tableau vide si ce n'est pas le cas
+    if 'precision_recall' not in metrics or not metrics['precision_recall']:
+        print("Données precision_recall manquantes ou vides")
+        metrics['precision_recall'] = []
+    
     return render_template('metrics_modal.html', metrics=metrics) 

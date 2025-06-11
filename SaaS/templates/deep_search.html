@@ -88,16 +88,64 @@
                         <button type="submit" class="btn btn-primary btn-lg">
                             <i class="fas fa-search"></i> Rechercher
                         </button>
-                        {% if results %}
-                        <button type="button" class="btn btn-info btn-lg ml-2" id="showMetricsBtn">
-                            <i class="fas fa-chart-bar"></i> Voir les métriques
-                        </button>
-                        {% endif %}
                     </div>
                 </div>
             </form>
         </div>
     </div>
+    
+    <!-- Informations de performance -->
+    {% if performance_info %}
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Performances d'exécution</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Temps total:</th>
+                            <td>{{ performance_info.total_time }} s</td>
+                        </tr>
+                        <tr>
+                            <th>Traitement de l'image:</th>
+                            <td>{{ performance_info.image_processing_time }} s</td>
+                        </tr>
+                        <tr>
+                            <th>Chargement des features:</th>
+                            <td>{{ performance_info.features_loading_time }} s</td>
+                        </tr>
+                        <tr>
+                            <th>Recherche:</th>
+                            <td>{{ performance_info.search_time }} s</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Tri des résultats:</th>
+                            <td>{{ performance_info.sort_time }} s</td>
+                        </tr>
+                        <tr>
+                            <th>Préparation de l'affichage:</th>
+                            <td>{{ performance_info.display_time }} s</td>
+                        </tr>
+                        <tr>
+                            <th>Calcul des métriques:</th>
+                            <td>{{ performance_info.metrics_time }} s</td>
+                        </tr>
+                        <tr>
+                            <th>Nombre de features / images:</th>
+                            <td>{{ performance_info.features_count }} / {{ performance_info.images_count }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
     
     <!-- Résultats de la recherche -->
     {% if results %}
@@ -130,97 +178,4 @@
     </div>
     {% endif %}
 </div>
-
-<!-- Modal pour les métriques -->
-<div class="modal fade" id="metricsModal" tabindex="-1" role="dialog" aria-labelledby="metricsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-info text-white">
-                <h5 class="modal-title" id="metricsModalLabel">Métriques d'évaluation</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body" id="metricsModalBody">
-                <!-- Le contenu sera chargé dynamiquement -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-{% if metrics %}
-<script>
-    // Stocker les métriques pour l'affichage
-    const metricsData = JSON.parse('{{ metrics|tojson|safe }}');
-    
-    // Afficher les métriques lorsque le bouton est cliqué
-    document.getElementById('showMetricsBtn').addEventListener('click', function() {
-        fetch('/deep_search/metrics', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                metrics: metricsData
-            }),
-        })
-        .then(response => response.text())
-        .then(html => {
-            document.getElementById('metricsModalBody').innerHTML = html;
-            $('#metricsModal').modal('show');
-            
-            // Dessiner le graphique de précision-rappel
-            if (metricsData.precision_recall && metricsData.precision_recall.length > 0) {
-                const ctx = document.getElementById('precisionRecallChart').getContext('2d');
-                const data = metricsData.precision_recall.map(pair => ({
-                    x: pair[0],  // rappel
-                    y: pair[1]   // précision
-                }));
-                
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        datasets: [{
-                            label: 'Courbe Précision-Rappel',
-                            data: data,
-                            borderColor: 'rgb(75, 192, 192)',
-                            tension: 0.1,
-                            fill: false
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        scales: {
-                            x: {
-                                type: 'linear',
-                                position: 'bottom',
-                                title: {
-                                    display: true,
-                                    text: 'Rappel'
-                                },
-                                min: 0,
-                                max: 1
-                            },
-                            y: {
-                                title: {
-                                    display: true,
-                                    text: 'Précision'
-                                },
-                                min: 0,
-                                max: 1
-                            }
-                        }
-                    }
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Erreur lors du chargement des métriques:', error);
-        });
-    });
-</script>
-{% endif %}
 {% endblock %} 

@@ -6,26 +6,32 @@
                     <h5 class="mb-0">Métriques de performance</h5>
                 </div>
                 <div class="card-body">
+                    {% if metrics is defined %}
                     <table class="table table-striped">
                         <tbody>
                             <tr>
                                 <th>Précision</th>
-                                <td>{{ "%.4f"|format(metrics.precision) }}</td>
+                                <td>{{ "%.4f"|format(metrics.precision|default(0)) }}</td>
                             </tr>
                             <tr>
                                 <th>Rappel</th>
-                                <td>{{ "%.4f"|format(metrics.rappel) }}</td>
+                                <td>{{ "%.4f"|format(metrics.rappel|default(0)) }}</td>
                             </tr>
                             <tr>
                                 <th>Précision moyenne (AP)</th>
-                                <td>{{ "%.4f"|format(metrics.ap) }}</td>
+                                <td>{{ "%.4f"|format(metrics.ap|default(0)) }}</td>
                             </tr>
                             <tr>
                                 <th>R-Precision</th>
-                                <td>{{ "%.4f"|format(metrics.r_precision) }}</td>
+                                <td>{{ "%.4f"|format(metrics.r_precision|default(0)) }}</td>
                             </tr>
                         </tbody>
                     </table>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        Aucune métrique disponible.
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -35,9 +41,26 @@
                     <h5 class="mb-0">Courbe Précision-Rappel</h5>
                 </div>
                 <div class="card-body">
+                    {% if metrics is defined and metrics.precision_recall is defined and metrics.precision_recall|length > 0 %}
                     <canvas id="precisionRecallChart" width="400" height="300"></canvas>
+                    {% else %}
+                    <div class="alert alert-info">
+                        Pas de données suffisantes pour générer une courbe précision-rappel.
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
+    
+    <!-- Informations de débogage pour les développeurs -->
+    <div class="card mt-3">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">Informations de débogage</h5>
+        </div>
+        <div class="card-body">
+            <pre>{{ metrics|tojson(indent=2) }}</pre>
+        </div>
+    </div>
+</div> 
 </div> 
