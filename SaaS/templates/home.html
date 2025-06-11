@@ -9,8 +9,9 @@
         <p class="text-center">Explorez notre base d'images, calculez des descripteurs et utilisez différentes méthodes de recherche.</p>
     </div>
 
+    <!-- Première ligne: Affichage et Descripteurs -->
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card feature-card">
                 <div class="card-body text-center">
                     <div class="feature-icon text-primary">
@@ -23,7 +24,7 @@
             </div>
         </div>
         
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card feature-card">
                 <div class="card-body text-center">
                     <div class="feature-icon text-secondary">
@@ -35,7 +36,10 @@
                 </div>
             </div>
         </div>
-        
+    </div>
+    
+    <!-- Deuxième ligne: Les 3 types de recherche -->
+    <div class="row mt-4">
         <div class="col-md-4">
             <div class="card feature-card">
                 <div class="card-body text-center">
@@ -48,9 +52,7 @@
                 </div>
             </div>
         </div>
-    </div>
-    
-    <div class="row mt-4">
+        
         <div class="col-md-4">
             <div class="card feature-card">
                 <div class="card-body text-center">
@@ -76,8 +78,11 @@
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-4">
+    </div>
+    
+    <!-- Troisième ligne: Vasarely et GitHub -->
+    <div class="row mt-4">
+        <div class="col-md-6">
             <div class="card feature-card">
                 <div class="card-body text-center">
                     <div class="feature-icon text-danger">
@@ -86,6 +91,21 @@
                     <h5 class="card-title">Pavage Vasarely</h5>
                     <p class="card-text">Générez des pavages d'hexagones dans le style de Victor Vasarely.</p>
                     <a href="{{ url_for('vasarely') }}" class="btn btn-danger">Générer</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card feature-card">
+                <div class="card-body text-center">
+                    <div class="feature-icon text-dark">
+                        <i class="fab fa-github"></i>
+                    </div>
+                    <h5 class="card-title">Code Source</h5>
+                    <p class="card-text">Explorez le code source du projet sur GitHub et contribuez au développement.</p>
+                    <a href="https://github.com/NicolasMelaerts/ML-DL-for-Multimedia-Retrieval" class="btn btn-dark" target="_blank">
+                        <i class="fab fa-github"></i> Voir sur GitHub
+                    </a>
                 </div>
             </div>
         </div>
