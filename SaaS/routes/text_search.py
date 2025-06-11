@@ -12,6 +12,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from PIL import Image
 import base64
 from io import BytesIO
+import time
 
 text_search_bp = Blueprint("text_search", __name__)
 
@@ -24,6 +25,7 @@ CAPTIONS_FILE = os.path.join(DESKTOP_APP_PATH, "Transformer/captions.json")
 EMBEDDINGS_DIR = os.path.join(DESKTOP_APP_PATH, "Transformer/embeddings_output")
 DATASETS_DIR = os.path.join(DESKTOP_APP_PATH, "MIR_DATASETS_B")
 
+# Configuration des animaux et races pour la recherche rapide d'images
 animaux = ["araignee", "chiens", "oiseaux", "poissons", "singes"]
 araignees = ["barn spider", "garden spider", "orb-weaving spider", "tarantula", "trap_door spider", "wolf spider"]
 chiens = ["boxer", "Chihuahua", "golden\x20retriever", "Labrador\x20retriever", "Rottweiler", "Siberian\x20husky"]
@@ -44,7 +46,8 @@ def index():
     error_message = ""
     success_message = ""
     query = ""
-    top_k = 2
+    top_k = 5
+    performance_info = {}
     
     # Charger le modèle si ce n'est pas déjà fait
     if model is None:
@@ -74,20 +77,35 @@ def index():
             error_message = "Le modèle n'est pas chargé."
         else:
             try:
+                # Mesurer le temps total
+                total_start_time = time.time()
+                
                 # Encoder la requête
+                encoding_start = time.time()
                 query_embedding = model.encode(query)
+                encoding_time = time.time() - encoding_start
+                performance_info["encoding_time"] = round(encoding_time, 4)
                 
                 # Recherche des images les plus proches
+                embedding_search_start = time.time()
+                similarity_calc_total = 0
+                image_path_search_total = 0
+                file_count = 0
+                results_list = []
+                
                 for root, dirs, files in os.walk(EMBEDDINGS_DIR):
                     for file in files:
                         if file.endswith('_embedding.txt'):
+                            file_count += 1
                             emb_path = os.path.join(root, file)
                             try:
                                 # Charger l'embedding
                                 emb = np.fromstring(open(emb_path).read(), sep=' ')
                                 
                                 # Calculer la similarité
+                                sim_start = time.time()
                                 sim = cosine_similarity([query_embedding], [emb])[0][0]
+                                similarity_calc_total += time.time() - sim_start
                                 
                                 # Extraire le chemin relatif
                                 relative_path = os.path.relpath(emb_path, EMBEDDINGS_DIR)
@@ -95,14 +113,16 @@ def index():
                                 
                                 # Extraire l'animal et la race
                                 path_parts = relative_path.split('/')
-                                animal = path_parts[0] if len(path_parts) > 0 else "Inconnu"
-                                race = path_parts[1] if len(path_parts) > 1 else "Inconnue"
+                                animal = path_parts[0] if len(path_parts) > 0 else None
+                                race = path_parts[1] if len(path_parts) > 1 else None
                                 
                                 # Construire le chemin de l'image
                                 image_filename = os.path.basename(relative_path)
                                 
                                 # Utiliser notre fonction optimisée pour trouver le chemin de l'image
-                                image_path = find_image_path(image_filename)
+                                path_search_start = time.time()
+                                image_path = find_image_path(image_filename, animal, race)
+                                image_path_search_total += time.time() - path_search_start
                                 
                                 # Récupérer la description si disponible
                                 caption = ""
@@ -111,35 +131,57 @@ def index():
                                         caption = captions[key]
                                         break
                                 
-                                # Convertir l'image en base64 pour l'affichage
-                                image_data = None
-                                if image_path and os.path.exists(image_path):
-                                    with Image.open(image_path) as img:
-                                        img = img.resize((200, 200), Image.LANCZOS)
-                                        buffer = BytesIO()
-                                        img.save(buffer, format="JPEG")
-                                        image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
-                                
-                                # Ajouter aux résultats
-                                attempted_path = image_path if image_path else f"Image non trouvée. Chemin tenté: {os.path.join(DATASETS_DIR, animal, race, image_filename)}"
-                                results.append({
-                                    'image_path': attempted_path,
-                                    'image_data': image_data,
-                                    'caption': caption,
-                                    'similarity': sim,
-                                    'animal': animal,
-                                    'race': race
-                                })
+                                # Ajouter aux résultats seulement si l'image est trouvée
+                                if image_path:
+                                    results_list.append((image_path, caption, sim, animal, race))
                             except Exception as e:
                                 print(f"Erreur lors du traitement de {emb_path}: {str(e)}")
                 
+                embedding_search_time = time.time() - embedding_search_start
+                performance_info["embedding_search_time"] = round(embedding_search_time, 4)
+                performance_info["similarity_calc_total"] = round(similarity_calc_total, 4)
+                performance_info["image_path_search_total"] = round(image_path_search_total, 4)
+                performance_info["file_count"] = file_count
+                
                 # Trier les résultats par similarité décroissante
-                results.sort(key=lambda x: x['similarity'], reverse=True)
+                sort_start = time.time()
+                results_list.sort(key=lambda x: x[2], reverse=True)
+                sort_time = time.time() - sort_start
+                performance_info["sort_time"] = round(sort_time, 4)
                 
                 # Limiter aux top_k résultats
-                results = results[:top_k]
+                results_list = results_list[:top_k]
                 
-                success_message = "Recherche effectuée avec succès."
+                # Préparation des résultats pour l'affichage
+                display_start = time.time()
+                for image_path, caption, sim, animal, race in results_list:
+                    # Convertir l'image en base64 pour l'affichage
+                    image_data = None
+                    if image_path and os.path.exists(image_path):
+                        with Image.open(image_path) as img:
+                            img = img.resize((200, 200), Image.LANCZOS)
+                            buffer = BytesIO()
+                            img.save(buffer, format="JPEG")
+                            image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
+                    
+                    # Ajouter aux résultats
+                    results.append({
+                        'image_path': image_path,
+                        'image_data': image_data,
+                        'caption': caption,
+                        'similarity': sim,
+                        'animal': animal,
+                        'race': race
+                    })
+                
+                display_time = time.time() - display_start
+                performance_info["display_time"] = round(display_time, 4)
+                
+                # Temps total
+                total_time = time.time() - total_start_time
+                performance_info["total_time"] = round(total_time, 4)
+                
+                success_message = f"Recherche effectuée avec succès en {performance_info['total_time']} secondes."
             except Exception as e:
                 error_message = f"Erreur lors de la recherche: {str(e)}"
     
@@ -149,7 +191,8 @@ def index():
                           error_message=error_message, 
                           success_message=success_message,
                           query=query,
-                          top_k=top_k) 
+                          top_k=top_k,
+                          performance_info=performance_info)
 
 # Fonction pour trouver la race correspondante dans la liste
 def find_matching_race(race_name, races_list):
@@ -191,83 +234,69 @@ def find_matching_race(race_name, races_list):
     # Si aucune correspondance n'est trouvée, retourner la première race de la liste
     return races_list[0]
 
-# Optimisation de la recherche d'images en supposant que toutes les images existent
-def find_image_path(image_filename):
+# Version optimisée de la recherche d'images (basée sur text_search_page.py)
+def find_image_path(image_filename, animal=None, race=None):
     """
-    Trouve le chemin d'une image en utilisant la structure connue du nom de fichier
-    Format: X_Y_animal_race_ZZZZ.jpg
-    Suppose que toutes les images existent dans la base de données
+    Trouve le chemin d'une image en utilisant directement les informations d'animal et de race
     """
-    # Vérifier si le nom de fichier contient déjà l'extension
-    if not image_filename.lower().endswith('.jpg'):
-        # Ajouter l'extension .jpg si elle n'est pas présente
-        image_filename = image_filename + '.jpg'
-    
-    # Extraire les parties du nom de fichier (sans l'extension)
-    base_name = os.path.splitext(image_filename)[0]
-    parts = base_name.split('_')
-    
-    if len(parts) < 5:  # Vérifier qu'il y a assez de parties
-        return None
-    
-    # Les parties 3 et 4 sont l'animal et la race
-    animal_name = parts[2]
-    race_name = parts[3]
-    
-    # Vérifier si l'animal est dans notre liste
-    if animal_name in animaux:
-        # Déterminer la liste de races correspondante
-        races_list = None
-        if animal_name == "araignee":
-            races_list = araignees
-        elif animal_name == "chiens":
-            races_list = chiens
-        elif animal_name == "oiseaux":
-            races_list = oiseaux
-        elif animal_name == "poissons":
-            races_list = poissons
-        elif animal_name == "singes":
-            races_list = singes
-        
-        # Trouver la race correspondante
-        matching_race = find_matching_race(race_name, races_list)
-        if matching_race:
-            # Construire le chemin avec le nom exact de la race (avec espaces)
-            direct_path = os.path.join(DATASETS_DIR, animal_name, matching_race, image_filename)
+    # Si animal et race sont fournis, utiliser directement ces informations
+    if animal and race:
+        # Essayer différentes extensions
+        for img_ext in ['.jpg', '.jpeg', '.png']:
+            # Extraire le nom de base sans extension
+            base_name = os.path.splitext(image_filename)[0]
+            direct_path = os.path.join(DATASETS_DIR, animal, race, f"{base_name}{img_ext}")
             if os.path.exists(direct_path):
                 return direct_path
+        
+        # Si aucune correspondance exacte, essayer de trouver la race correspondante
+        races_list = None
+        if animal == "araignee":
+            races_list = araignees
+        elif animal == "chiens":
+            races_list = chiens
+        elif animal == "oiseaux":
+            races_list = oiseaux
+        elif animal == "poissons":
+            races_list = poissons
+        elif animal == "singes":
+            races_list = singes
+        
+        if races_list:
+            matching_race = find_matching_race(race, races_list)
+            if matching_race:
+                for img_ext in ['.jpg', '.jpeg', '.png']:
+                    base_name = os.path.splitext(image_filename)[0]
+                    direct_path = os.path.join(DATASETS_DIR, animal, matching_race, f"{base_name}{img_ext}")
+                    if os.path.exists(direct_path):
+                        return direct_path
     
-    # Si on arrive ici, c'est qu'on n'a pas trouvé de correspondance exacte
-    # Trouver l'animal le plus proche
-    closest_animal = None
+    # Si on arrive ici ou si animal/race ne sont pas fournis, parcourir tous les animaux et races
+    # Extraire le nom de base sans extension
+    base_name = os.path.splitext(image_filename)[0]
+    
+    # Parcourir tous les animaux et races
     for animal in animaux:
-        if animal_name.lower() in animal.lower() or animal.lower() in animal_name.lower():
-            closest_animal = animal
-            break
-    
-    if not closest_animal:
-        closest_animal = animal_name  # Utiliser tel quel si pas de correspondance
-    
-    # Déterminer la liste de races correspondante
-    races_list = None
-    if closest_animal == "araignee":
-        races_list = araignees
-    elif closest_animal == "chiens":
-        races_list = chiens
-    elif closest_animal == "oiseaux":
-        races_list = oiseaux
-    elif closest_animal == "poissons":
-        races_list = poissons
-    elif closest_animal == "singes":
-        races_list = singes
-    
-    # Trouver la race correspondante
-    matching_race = find_matching_race(race_name, races_list)
-    if matching_race:
-        # Construire le chemin avec le nom exact de la race (avec espaces)
-        direct_path = os.path.join(DATASETS_DIR, closest_animal, matching_race, image_filename)
-        if os.path.exists(direct_path):
-            return direct_path
+        races_list = None
+        if animal == "araignee":
+            races_list = araignees
+        elif animal == "chiens":
+            races_list = chiens
+        elif animal == "oiseaux":
+            races_list = oiseaux
+        elif animal == "poissons":
+            races_list = poissons
+        elif animal == "singes":
+            races_list = singes
+        
+        if races_list:
+            for race in races_list:
+                # Essayer de trouver l'image dans ce dossier
+                for img_ext in ['.jpg', '.jpeg', '.png']:
+                    image_name = f"{base_name}{img_ext}"
+                    direct_path = os.path.join(DATASETS_DIR, animal, race, image_name)
+                    if os.path.exists(direct_path):
+                        return direct_path
     
     # Si on arrive ici, on n'a pas trouvé le fichier
     return None 

@@ -42,6 +42,30 @@
         </div>
     {% endif %}
     
+    {% if performance_info %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Performances</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Temps total:</strong> {{ performance_info.total_time }} s</p>
+                        <p><strong>Encodage de la requête:</strong> {{ performance_info.encoding_time }} s</p>
+                        <p><strong>Recherche d'embeddings:</strong> {{ performance_info.embedding_search_time }} s</p>
+                        <p><strong>Calcul de similarité:</strong> {{ performance_info.similarity_calc_total }} s</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Recherche des chemins d'images:</strong> {{ performance_info.image_path_search_total }} s</p>
+                        <p><strong>Tri des résultats:</strong> {{ performance_info.sort_time }} s</p>
+                        <p><strong>Préparation de l'affichage:</strong> {{ performance_info.display_time }} s</p>
+                        <p><strong>Nombre de fichiers traités:</strong> {{ performance_info.file_count }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    
     {% if results %}
         <h2>Résultats</h2>
         
