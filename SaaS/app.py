@@ -5,6 +5,10 @@ Application principale Flask
 
 import os
 import sys
+from functools import wraps
+from flask import Flask, render_template, redirect, url_for, request, jsonify, send_from_directory, flash, session
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Ajouter le chemin DESKTOP_APP au PYTHONPATH
 desktop_app_path = '/opt/DESKTOP_APP'
@@ -12,19 +16,84 @@ if desktop_app_path not in sys.path:
     sys.path.append(desktop_app_path)
 
 # Maintenant vous pouvez importer les modules de DESKTOP_APP
-from flask import Flask, render_template, redirect, url_for, request, jsonify, send_from_directory
 from routes.text_search import text_search_bp
 from routes.descriptors import descriptors_bp
 from routes.display import display_bp
 from routes.search import search_bp
 from routes.deep_search import deep_search_bp
-import os
 import requests
 
 app = Flask(__name__)
 
 # Définir une clé secrète pour l'application
 app.config['SECRET_KEY'] = 'une_cle_secrete_tres_difficile_a_deviner'
+
+# Configuration Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+# Classe utilisateur simple pour l'authentification
+class User(UserMixin):
+    def __init__(self, id, username, password):
+        self.id = id
+        self.username = username
+        self.password_hash = password
+
+# Utilisateur unique (à remplacer par une base de données dans un environnement de production)
+users = {
+    'admin': User(1, 'admin', generate_password_hash('password123'))
+}
+
+@login_manager.user_loader
+def load_user(user_id):
+    for user in users.values():
+        if user.id == int(user_id):
+            return user
+    return None
+
+# Routes d'authentification
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username in users and check_password_hash(users[username].password_hash, password):
+            login_user(users[username])
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('home'))
+        else:
+            flash('Identifiants incorrects', 'danger')
+    
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+# Décorateur personnalisé pour exclure le service Vasarely de l'authentification
+def login_required_except_vasarely(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if request.endpoint in ['vasarely', 'generate_vasarely'] or request.path.startswith('/vasarely'):
+            return f(*args, **kwargs)
+        return login_required(f)(*args, **kwargs)
+    return decorated_function
+
+# Appliquer le décorateur personnalisé à toutes les routes sauf login et vasarely
+@app.before_request
+def before_request():
+    if request.endpoint in ['login', 'logout', 'vasarely', 'generate_vasarely', 'static'] or request.path.startswith('/vasarely'):
+        return
+    
+    if not current_user.is_authenticated:
+        return redirect(url_for('login', next=request.url))
 
 # Enregistrement des blueprints
 app.register_blueprint(text_search_bp, url_prefix='/text_search')

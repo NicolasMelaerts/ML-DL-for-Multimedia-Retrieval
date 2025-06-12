@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-header text-center bg-gradient-primary py-4" style="background: linear-gradient(135deg, #007bff, #6610f2);">
+                    <div class="mb-3">
+                        <i class="fas fa-search fa-4x text-white"></i>
+                        <i class="fas fa-image fa-4x text-white ml-3"></i>
+                    </div>
+                    <h3 class="text-white font-weight-bold">Moteur de Recherche d'Images</h3>
+                </div>
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h4 class="text-dark mb-2">Connexion</h4>
+                        <p class="text-muted">Veuillez vous connecter pour accéder au système</p>
+                    </div>
+                    
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST" class="needs-validation" novalidate>
+                        <div class="form-group mb-4">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light border-right-0">
+                                        <i class="fas fa-user text-primary"></i>
+                                    </span>
+                                </div>
+                                <input type="text" class="form-control border-left-0 bg-light" 
+                                       id="username" name="username" placeholder="Nom d'utilisateur" required>
+                            </div>
+                        </div>
+                        <div class="form-group mb-4">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light border-right-0">
+                                        <i class="fas fa-lock text-primary"></i>
+                                    </span>
+                                </div>
+                                <input type="password" class="form-control border-left-0 bg-light" 
+                                       id="password" name="password" placeholder="Mot de passe" required>
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-block btn-lg py-2" style="background: linear-gradient(135deg, #007bff, #6610f2); border: none;">
+                                <i class="fas fa-sign-in-alt mr-2"></i> Se connecter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center py-3" style="background-color: #f8f9fa;">
+                    <div class="small text-muted">
+                        <i class="fas fa-shield-alt mr-1"></i> Accès sécurisé au système de recherche d'images
+                    </div>
+                    <div class="mt-3">
+                        <span class="badge badge-light px-3 py-2 mr-2"><i class="fas fa-code text-primary mr-1"></i> IA</span>
+                        <span class="badge badge-light px-3 py-2 mr-2"><i class="fas fa-search text-primary mr-1"></i> Recherche</span>
+                        <span class="badge badge-light px-3 py-2"><i class="fas fa-image text-primary mr-1"></i> Images</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #007bff, #6610f2);
+    }
+    .card {
+        overflow: hidden;
+        border-radius: 10px;
+    }
+    .input-group-text {
+        border-radius: 5px 0 0 5px !important;
+    }
+    .form-control {
+        border-radius: 0 5px 5px 0 !important;
+        height: 50px;
+    }
+    .btn-primary {
+        border-radius: 5px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        transition: all 0.3s;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+    }
+    .badge {
+        font-size: 0.85rem;
+        border-radius: 20px;
+    }
+</style>
+
+<script>
+// Validation des formulaires Bootstrap
+(function() {
+  'use strict';
+  window.addEventListener('load', function() {
+    var forms = document.getElementsByClassName('needs-validation');
+    var validation = Array.prototype.filter.call(forms, function(form) {
+      form.addEventListener('submit', function(event) {
+        if (form.checkValidity() === false) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
+  }, false);
+})();
+</script>
+{% endblock %} 
