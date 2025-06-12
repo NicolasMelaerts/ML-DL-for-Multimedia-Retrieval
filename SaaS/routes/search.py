@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import io
 from io import BytesIO
 from PIL import Image
-from utils.decorators import login_required
 
 # Chemin vers le dossier DESKTOP_APP
 DESKTOP_APP_PATH = "/opt/DESKTOP_APP"
@@ -40,13 +39,13 @@ poissons = ["dogfish", "eagle ray", "guitarfish", "hammerhead", "ray", "tiger sh
 singes = ["baboon", "chimpanzee", "gorilla", "macaque", "orangutan", "squirrel monkey"]
 
 @search_bp.route('/', methods=['GET', 'POST'])
-@login_required
 def index():
     results = []
     query_image_data = None
     performance_info = {}
     metrics = None
     descriptor_status = check_available_descriptors()
+    expected_class = ''  # Initialize expected_class for all code paths
     
     # Au début de la fonction index(), ajouter ces variables pour le template
     races = {
