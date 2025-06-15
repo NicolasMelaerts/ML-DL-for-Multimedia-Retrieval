@@ -1,7 +1,5 @@
 # 🎯 ML-DL for Multimedia Retrieval
 
-Ce projet utilise Docker pour encapsuler une application PyQt et un service web Flask. Voici les étapes à suivre pour lancer le projet pour la première fois et les commandes utiles pour les exécutions ultérieures.
-
 ---
 
 ## 🧰 Prérequis
