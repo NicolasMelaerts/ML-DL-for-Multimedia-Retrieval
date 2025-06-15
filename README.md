@@ -13,7 +13,7 @@ git clone https://github.com/NicolasMelaerts/ML-DL-for-Multimedia-Retrieval.git
 cd ML-DL-for-Multimedia-Retrieval
 ```
 - Exécutez le script `download_and_unzip.sh` pour télécharger la base de données d'images, le dossier de transformer déjà entrainé pour le moteur de recherche par texte, et les features déjà extraites avec Google Colab pour les modèles Deep Learning. Ce script extraira ces fichiers dans le dossier `DESKTOP_APP`.
-   ```bash
+```bash
 ./download_and_unzip.sh
 ```
 
