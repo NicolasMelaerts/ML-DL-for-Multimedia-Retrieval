@@ -12,20 +12,16 @@
 git clone https://github.com/NicolasMelaerts/ML-DL-for-Multimedia-Retrieval.git
 cd ML-DL-for-Multimedia-Retrieval
 ```
+- Exécutez le script `download_and_unzip.sh` pour télécharger la base de données d'images, le dossier de transformer déjà entrainé pour le moteur de recherche par texte, et les features déjà extraites avec Google Colab pour les modèles Deep Learning. Ce script extraira ces fichiers dans le dossier `DESKTOP_APP`.
+   ```bash
+./download_and_unzip.sh
+```
 
 ---
 
 ## 🚀 Premier lancement de l'application desktop
 
-### 1. Télécharger les fichiers nécessaires
-
-Exécutez le script `download_and_unzip.sh` pour télécharger la base de données d'images, le dossier de transformer déjà entrainé pour le moteur de recherche par texte, et les features déjà extraites avec Google Colab pour les modèles Deep Learning. Ce script extraira ces fichiers dans le dossier `DESKTOP_APP`.
-   
-```bash
-./download_and_unzip.sh
-```
-
-### 2. Configurer l'affichage graphique
+### 1. Configurer l'affichage graphique
 
 #### Sur macOS
 ```bash
@@ -48,13 +44,13 @@ xhost +
 xhost +local:docker
 ```
 
-### 3. Construire l'image Docker
+### 2. Construire l'image Docker
 
 ```bash
 docker build -t desktop_app_image -f DESKTOP_APP/Dockerfile .
 ```
 
-### 4. Lancer le conteneur et exécuter le programme
+### 3. Lancer le conteneur et exécuter le programme
 
 ```bash
 docker run -it --rm \
