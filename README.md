@@ -90,6 +90,8 @@ docker run -it --rm \
 ## 🔁 Lancement ultérieur de l'application desktop en partage de connexion (Iphone host 4G et Mac)
 
 ```bash
+export DISPLAY=:0
+xhost + 127.0.0.1
 export DISPLAY=host.docker.internal:0
 docker run -it --rm \
   -e DISPLAY=$DISPLAY \
